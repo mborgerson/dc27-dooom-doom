@@ -18,7 +18,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef XBOX
 #include "SDL_mixer.h"
+#endif
 
 #include "config.h"
 #include "doomtype.h"
@@ -98,8 +100,10 @@ static int snd_mport = 0;
 
 static sound_module_t *sound_modules[] = 
 {
+#ifndef XBOX
     &sound_sdl_module,
     &sound_pcsound_module,
+#endif
     NULL,
 };
 
@@ -107,8 +111,10 @@ static sound_module_t *sound_modules[] =
 
 static music_module_t *music_modules[] =
 {
+#ifndef XBOX
     &music_sdl_module,
     &music_opl_module,
+#endif
     NULL,
 };
 
@@ -204,6 +210,9 @@ void I_InitSound(boolean use_sfx_prefix)
     //
 
     nosound = M_CheckParm("-nosound") > 0;
+#ifdef XBOX
+    nosound = 1;
+#endif
 
     //!
     // @vanilla
@@ -212,6 +221,9 @@ void I_InitSound(boolean use_sfx_prefix)
     //
 
     nosfx = M_CheckParm("-nosfx") > 0;
+#ifdef XBOX
+    nosfx = 1;
+#endif
 
     //!
     // @vanilla
@@ -220,6 +232,9 @@ void I_InitSound(boolean use_sfx_prefix)
     //
 
     nomusic = M_CheckParm("-nomusic") > 0;
+#ifdef XBOX
+    nomusic = 1;
+#endif
 
     //!
     //
@@ -239,12 +254,14 @@ void I_InitSound(boolean use_sfx_prefix)
         // the TIMIDITY_CFG environment variable here before SDL_mixer
         // is opened.
 
+#ifndef XBOX
         if (!nomusic
          && (snd_musicdevice == SNDDEVICE_GENMIDI
           || snd_musicdevice == SNDDEVICE_GUS))
         {
             I_InitTimidityConfig();
         }
+#endif
 
         if (!nosfx)
         {
@@ -478,11 +495,22 @@ boolean I_MusicIsPlaying(void)
     }
 }
 
+#ifdef XBOX
+char *snd_dmxoption;
+int use_libsamplerate;
+float libsamplerate_scale;
+float libsamplerate_scale;
+int opl_io_port;
+char *timidity_cfg_path;
+#endif
+
 void I_BindSoundVariables(void)
 {
+#ifndef XBOX
     extern char *snd_dmxoption;
     extern int use_libsamplerate;
     extern float libsamplerate_scale;
+#endif
 
     M_BindIntVariable("snd_musicdevice",         &snd_musicdevice);
     M_BindIntVariable("snd_sfxdevice",           &snd_sfxdevice);

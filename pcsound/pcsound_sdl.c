@@ -17,9 +17,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
-#include "SDL.h"
-#include "SDL_mixer.h"
+// #include "SDL.h"
+// #include "SDL_mixer.h"
 
 #include "pcsound.h"
 #include "pcsound_internal.h"
@@ -39,7 +40,7 @@ static pcsound_callback_func callback;
 // Output sound format
 
 static int mixing_freq;
-static Uint16 mixing_format;
+static uint16_t mixing_format;
 static int mixing_channels;
 
 // Currently playing sound
@@ -53,8 +54,9 @@ static int phase_offset = 0;
 
 // Mixer function that does the PC speaker emulation
 
-static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
+static void PCSound_Mix_Callback(void *udata, uint8_t *stream, int len)
 {
+#if 0
     Sint16 *leftptr;
     Sint16 *rightptr;
     Sint16 this_value;
@@ -136,24 +138,30 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
         leftptr += 2;
         rightptr += 2;
     }
+#endif
 }
 
 static int SDLIsInitialized(void)
 {
+    return 1;
+#if 0
     int freq, channels;
     Uint16 format;
 
     return Mix_QuerySpec(&freq, &format, &channels);
+#endif
 }
 
 static void PCSound_SDL_Shutdown(void)
 {
+#if 0
     if (sdl_was_initialized)
     {
         Mix_CloseAudio();
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
         sdl_was_initialized = 0;
     }
+#endif
 }
 
 // Calculate slice size, based on MAX_SOUND_SLICE_TIME.
@@ -161,6 +169,7 @@ static void PCSound_SDL_Shutdown(void)
 
 static int GetSliceSize(void)
 {
+#if 0
     int limit;
     int n;
 
@@ -179,12 +188,13 @@ static int GetSliceSize(void)
     }
 
     // Should never happen?
-
+#endif
     return 1024;
 }
 
 static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 {
+#if 0
     int slicesize;
 
     // Check if SDL_mixer has been opened already
@@ -237,7 +247,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
     current_remaining = 0;
 
     Mix_SetPostMix(PCSound_Mix_Callback, NULL);
-
+#endif
     return 1;
 }
 

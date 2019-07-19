@@ -67,7 +67,9 @@ void NET_DedicatedServer(void)
 
     NET_OpenLog();
     NET_SV_Init();
+#ifndef XBOX
     NET_SV_AddModule(&net_sdl_module);
+#endif
     NET_SV_RegisterWithMaster();
 
     while (true)

@@ -1,7 +1,28 @@
+set(XBOX TRUE)
+
+if(XBOX)
+set(NXDK_PATH "/home/mborgerson/Projects/dcdoom/nxdk")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_nxdk")
+else()
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+endif()
 
 cmake_minimum_required(VERSION 3.7.2)
 project("Chocolate Doom" VERSION 3.0.0 LANGUAGES C)
+
+if(XBOX)
+set(CMAKE_C_COMPILER clang)
+add_compile_options("-target" "i386-pc-win32" "-march=pentium3"
+	"-ffreestanding" "-nostdlib" "-fno-builtin" "-fno-exceptions"
+	"-I${NXDK_PATH}/lib" "-I${NXDK_PATH}/lib/xboxrt"
+	"-isystem" "${NXDK_PATH}/lib/pdclib/include"
+	"-I${NXDK_PATH}/lib/pdclib/platform/xbox/include"
+	"-I${NXDK_PATH}/lib/winapi"
+	#"-I${NXDK_PATH}/lib/sdl"
+	"-Wno-ignored-attributes" "-DNXDK" "-DXBOX" "-D__STDC__" "-U _MSC_VER" "-U __WIN32__" "-U _WIN32"
+    "-Werror=implicit"
+	"-g" "-gdwarf-4")
+endif()
 
 # Autotools variables
 set(top_srcdir ${CMAKE_CURRENT_SOURCE_DIR})
@@ -32,6 +53,7 @@ find_package(SDL2 2.0.1)
 find_package(SDL2_mixer 2.0.0)
 find_package(SDL2_net 2.0.0)
 
+if(NOT XBOX)
 # Check for libsamplerate.
 find_package(samplerate)
 if(SAMPLERATE_FOUND)
@@ -43,6 +65,7 @@ find_package(PNG)
 if(PNG_FOUND)
     set(HAVE_LIBPNG TRUE)
 endif()
+endif()
 
 find_package(m)
 
@@ -50,7 +73,9 @@ include(CheckSymbolExists)
 include(CheckIncludeFile)
 check_symbol_exists(strcasecmp "strings.h" HAVE_DECL_STRCASECMP)
 check_symbol_exists(strncasecmp "strings.h" HAVE_DECL_STRNCASECMP)
+if(NOT XBOX)
 check_include_file("dirent.h" HAVE_DIRENT_H)
+endif()
 
 string(CONCAT WINDOWS_RC_VERSION "${PROJECT_VERSION_MAJOR}, "
     "${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}, 0")
@@ -67,6 +92,12 @@ configure_file(src/resource.rc.in src/resource.rc)
 configure_file(src/setup-res.rc.in src/setup-res.rc)
 configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
 
+if(XBOX)
+foreach(SUBDIR textscreen pcsound src)
+    add_subdirectory("${SUBDIR}")
+endforeach()
+else()
 foreach(SUBDIR textscreen midiproc opl pcsound src)
     add_subdirectory("${SUBDIR}")
 endforeach()
+endif()

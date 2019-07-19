@@ -204,11 +204,15 @@ void I_PrintStartupBanner(const char *gamedescription)
 
 boolean I_ConsoleStdout(void)
 {
+#if XBOX
+    return false;
+#else
 #ifdef _WIN32
     // SDL "helpfully" always redirects stdout to a file.
     return false;
 #else
     return isatty(fileno(stdout));
+#endif
 #endif
 }
 

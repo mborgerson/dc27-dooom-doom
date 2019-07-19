@@ -42,13 +42,16 @@ const char *TXT_DIRECTORY[] = { "__directory__", NULL };
 
 #ifndef _WIN32
 
-#include <fcntl.h>
+// #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <sys/wait.h>
+// #include <sys/wait.h>
 
 static char *ExecReadOutput(char **argv)
 {
+#if 1
+    return NULL;
+#else
     char *result;
     int completed;
     int pid, status, result_len;
@@ -136,6 +139,7 @@ static char *ExecReadOutput(char **argv)
     }
 
     return result;
+#endif
 }
 
 #endif

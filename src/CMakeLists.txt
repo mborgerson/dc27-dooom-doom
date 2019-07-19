@@ -1,6 +1,12 @@
+if(XBOX)
+    # Only care about doom rn
+    add_subdirectory(doom)
+else()
+###### DON'T CARE FOR XBOX
 foreach(SUBDIR doom heretic hexen strife setup)
     add_subdirectory("${SUBDIR}")
 endforeach()
+endif()
 
 # Common source files used by absolutely everything:
 
@@ -11,6 +17,9 @@ set(COMMON_SOURCE_FILES
     m_misc.c             m_misc.h)
 
 # Dedicated server (chocolate-server):
+
+###### DON'T CARE FOR XBOX
+if(NOT XBOX)
 
 set(DEDSERV_FILES
     d_dedicated.c
@@ -34,6 +43,8 @@ target_include_directories("${PROGRAM_PREFIX}server"
                            PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
 target_link_libraries("${PROGRAM_PREFIX}server" SDL2::SDL2main SDL2::net)
 
+endif()
+
 # Source files used by the game binaries (chocolate-doom, etc.)
 
 set(GAME_SOURCE_FILES
@@ -55,10 +66,10 @@ set(GAME_SOURCE_FILES
                         i_swap.h
     i_midipipe.c        i_midipipe.h
     i_musicpack.c
-    i_oplmusic.c
+    #i_oplmusic.c
     i_pcsound.c
-    i_sdlmusic.c
-    i_sdlsound.c
+    #i_sdlmusic.c
+    #i_sdlsound.c
     i_sound.c           i_sound.h
     i_timer.c           i_timer.h
     i_video.c           i_video.h
@@ -80,7 +91,7 @@ set(GAME_SOURCE_FILES
     net_packet.c        net_packet.h
     net_petname.c       net_petname.h
     net_query.c         net_query.h
-    net_sdl.c           net_sdl.h
+    #net_sdl.c           net_sdl.h
     net_server.c        net_server.h
     net_structrw.c      net_structrw.h
     sha1.c              sha1.h
@@ -129,6 +140,14 @@ if(PNG_FOUND)
     list(APPEND EXTRA_LIBS PNG::PNG)
 endif()
 
+if(XBOX)
+
+add_library("nxdk-doom" STATIC ${SOURCE_FILES_WITH_DEH})
+target_include_directories("nxdk-doom" PRIVATE ${GAME_INCLUDE_DIRS})
+target_link_libraries("nxdk-doom" doom ${EXTRA_LIBS})
+
+else()
+
 if(WIN32)
     add_executable("${PROGRAM_PREFIX}doom" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
 else()
@@ -143,6 +162,10 @@ if(MSVC)
                           LINK_FLAGS "/MANIFEST:NO")
 endif()
 
+endif()
+
+###### DON'T CARE FOR XBOX
+if(NOT XBOX)
 if(WIN32)
     add_executable("${PROGRAM_PREFIX}heretic" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
 else()
@@ -226,3 +249,4 @@ add_executable(mus2mid mus2mid.c memio.c z_native.c i_system.c m_argv.c m_misc.c
 target_compile_definitions(mus2mid PRIVATE "-DSTANDALONE")
 target_include_directories(mus2mid PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
 target_link_libraries(mus2mid SDL2::SDL2main SDL2::SDL2)
+endif()
