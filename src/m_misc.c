@@ -37,6 +37,7 @@
 #include <stat.h>
 // #include <types.h>
 #include <assert.h>
+#include <string.h>
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -62,7 +63,8 @@
 void M_MakeDirectory(const char *path)
 {
 #ifdef XBOX
-    assert(0);
+    if (strcmp(path, "") == 0) return;
+    return; //assert(0);
 #else
 #ifdef _WIN32
     mkdir(path);

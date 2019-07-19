@@ -89,8 +89,13 @@ static boolean initialized = false;
 
 // disable mouse?
 
+#ifdef XBOX
+static boolean nomouse = true;
+int usemouse = 0;
+#else
 static boolean nomouse = false;
 int usemouse = 1;
+#endif
 
 // Save screenshots in PNG format.
 
@@ -110,8 +115,8 @@ int video_display = 0;
 
 // Screen width and height, from configuration file.
 
-int window_width = 800;
-int window_height = 600;
+int window_width = 640;
+int window_height = 480;
 
 // Fullscreen mode, 0x0 for SDL_WINDOW_FULLSCREEN_DESKTOP.
 
@@ -141,7 +146,7 @@ int vga_porch_flash = false;
 // Force software rendering, for systems which lack effective hardware
 // acceleration
 
-int force_software_renderer = false;
+int force_software_renderer = true;
 
 // Time to wait for the screen to settle on startup before starting the
 // game (ms)
@@ -502,6 +507,8 @@ static void UpdateGrab(void)
     static boolean currently_grabbed = false;
     boolean grab;
 
+    if (!usemouse) return;
+
     grab = MouseShouldBeGrabbed();
 
     if (screensaver_mode)
@@ -602,6 +609,8 @@ static void LimitTextureSize(int *w_upscale, int *h_upscale)
     }
 }
 
+#include <assert.h>
+
 static void CreateUpscaledTexture(boolean force)
 {
     int w, h;
@@ -617,6 +626,9 @@ static void CreateUpscaledTexture(boolean force)
     {
         I_Error("Failed to get renderer output size: %s", SDL_GetError());
     }
+
+    w = SCREENWIDTH;
+    h = SCREENHEIGHT;
 
     // When the screen or window dimensions do not match the aspect ratio
     // of the texture, the rendered area is scaled down to fit. Calculate
@@ -676,7 +688,7 @@ static void CreateUpscaledTexture(boolean force)
                                 SDL_TEXTUREACCESS_TARGET,
                                 w_upscale*SCREENWIDTH,
                                 h_upscale*SCREENHEIGHT);
-
+    assert(new_texture != NULL);
     old_texture = texture_upscaled;
     texture_upscaled = new_texture;
 
@@ -784,6 +796,7 @@ void I_FinishUpdate (void)
 
     SDL_RenderClear(renderer);
 
+#ifndef XBOX
     // Render this intermediate texture into the upscaled texture
     // using "nearest" integer scaling.
 
@@ -794,6 +807,9 @@ void I_FinishUpdate (void)
 
     SDL_SetRenderTarget(renderer, NULL);
     SDL_RenderCopy(renderer, texture_upscaled, NULL, NULL);
+#else
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+#endif
 
     // Draw!
 
@@ -1227,9 +1243,10 @@ static void SetVideoMode(void)
     // Turn on vsync if we aren't in a -timedemo
     if (!singletics && mode.refresh_rate > 0)
     {
-        renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
+        // renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
     }
 
+    force_software_renderer = 1;
     if (force_software_renderer)
     {
         renderer_flags |= SDL_RENDERER_SOFTWARE;
@@ -1330,10 +1347,13 @@ static void SetVideoMode(void)
                                 pixel_format,
                                 SDL_TEXTUREACCESS_STREAMING,
                                 SCREENWIDTH, SCREENHEIGHT);
+    assert(texture != 0);
 
     // Initially create the upscaled texture for rendering to screen
 
+#ifndef XBOX
     CreateUpscaledTexture(true);
+#endif
 }
 
 void I_InitGraphics(void)
