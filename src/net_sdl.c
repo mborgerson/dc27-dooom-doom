@@ -33,7 +33,11 @@
 // NETWORKING
 //
 
+#if XBOX
+#include "../../net.h"
+#else
 #include <SDL_net.h>
+#endif
 
 #define DEFAULT_PORT 2342
 
