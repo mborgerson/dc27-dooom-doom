@@ -91,7 +91,7 @@ set(GAME_SOURCE_FILES
     net_packet.c        net_packet.h
     net_petname.c       net_petname.h
     net_query.c         net_query.h
-    #net_sdl.c           net_sdl.h
+    net_sdl.c           net_sdl.h
     net_server.c        net_server.h
     net_structrw.c      net_structrw.h
     sha1.c              sha1.h
