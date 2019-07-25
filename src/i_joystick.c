@@ -297,7 +297,8 @@ static int GetButtonsState(void)
 
 // Exit hack
     if (SDL_JoystickGetButton(joystick, 6)) {
-        HalReturnToFirmware(HalQuickRebootRoutine);
+        HalReturnToFirmware(HalRebootRoutine);
+        while (1);
     }
 
     return result;
