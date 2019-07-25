@@ -907,14 +907,15 @@ void I_InitWindowTitle(void)
 void I_InitWindowIcon(void)
 {
     SDL_Surface *surface;
-
+#ifndef XBOX
     surface = SDL_CreateRGBSurfaceFrom((void *) icon_data, icon_w, icon_h,
                                        32, icon_w * 4,
                                        0xff << 24, 0xff << 16,
                                        0xff << 8, 0xff << 0);
-
+    assert(screen != NULL);
     SDL_SetWindowIcon(screen, surface);
     SDL_FreeSurface(surface);
+#endif
 }
 
 // Set video size to a particular scale factor (1x, 2x, 3x, etc.)
@@ -1261,6 +1262,7 @@ static void SetVideoMode(void)
         texture_upscaled = NULL;
     }
 
+    assert(screen != NULL);
     renderer = SDL_CreateRenderer(screen, -1, renderer_flags);
 
     if (renderer == NULL)
