@@ -17,10 +17,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef XBOX
 #include <stdint.h>
-
-// #include "SDL.h"
-// #include "SDL_mixer.h"
+#else
+#include "SDL.h"
+#include "SDL_mixer.h"
+#endif
 
 #include "pcsound.h"
 #include "pcsound_internal.h"
@@ -56,7 +58,7 @@ static int phase_offset = 0;
 
 static void PCSound_Mix_Callback(void *udata, uint8_t *stream, int len)
 {
-#if 0
+#ifndef XBOX
     Sint16 *leftptr;
     Sint16 *rightptr;
     Sint16 this_value;
@@ -143,8 +145,9 @@ static void PCSound_Mix_Callback(void *udata, uint8_t *stream, int len)
 
 static int SDLIsInitialized(void)
 {
+#ifdef XBOX
     return 1;
-#if 0
+#else
     int freq, channels;
     Uint16 format;
 
@@ -154,7 +157,7 @@ static int SDLIsInitialized(void)
 
 static void PCSound_SDL_Shutdown(void)
 {
-#if 0
+#ifndef XBOX
     if (sdl_was_initialized)
     {
         Mix_CloseAudio();
@@ -169,7 +172,7 @@ static void PCSound_SDL_Shutdown(void)
 
 static int GetSliceSize(void)
 {
-#if 0
+#ifndef XBOX
     int limit;
     int n;
 
@@ -188,13 +191,15 @@ static int GetSliceSize(void)
     }
 
     // Should never happen?
-#endif
     return 1024;
+#else
+    return 1024;
+#endif
 }
 
 static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 {
-#if 0
+#ifndef XBOX
     int slicesize;
 
     // Check if SDL_mixer has been opened already

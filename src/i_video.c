@@ -114,9 +114,13 @@ char *window_position = "center";
 int video_display = 0;
 
 // Screen width and height, from configuration file.
-
+#ifdef XBOX
 int window_width = 640;
 int window_height = 480;
+#else
+int window_width = 800;
+int window_height = 600;
+#endif
 
 // Fullscreen mode, 0x0 for SDL_WINDOW_FULLSCREEN_DESKTOP.
 
@@ -145,8 +149,11 @@ int vga_porch_flash = false;
 
 // Force software rendering, for systems which lack effective hardware
 // acceleration
-
+#ifdef XBOX
 int force_software_renderer = true;
+#else
+int force_software_renderer = false;
+#endif
 
 // Time to wait for the screen to settle on startup before starting the
 // game (ms)
@@ -627,8 +634,10 @@ static void CreateUpscaledTexture(boolean force)
         I_Error("Failed to get renderer output size: %s", SDL_GetError());
     }
 
+#ifdef XBOX
     w = SCREENWIDTH;
     h = SCREENHEIGHT;
+#endif
 
     // When the screen or window dimensions do not match the aspect ratio
     // of the texture, the rendered area is scaled down to fit. Calculate
@@ -1244,10 +1253,14 @@ static void SetVideoMode(void)
     // Turn on vsync if we aren't in a -timedemo
     if (!singletics && mode.refresh_rate > 0)
     {
-        // renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
+#ifndef XBOX
+        renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
+#endif
     }
 
+#ifdef XBOX
     force_software_renderer = 1;
+#endif
     if (force_software_renderer)
     {
         renderer_flags |= SDL_RENDERER_SOFTWARE;

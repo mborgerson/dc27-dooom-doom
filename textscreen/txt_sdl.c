@@ -242,8 +242,10 @@ int TXT_Init(void)
     screen_image_w = TXT_SCREEN_W * font->w;
     screen_image_h = TXT_SCREEN_H * font->h;
 
+#ifdef XBOX
     screen_image_w = 640;
     screen_image_h = 480;
+#endif
 
     // If highdpi_font is selected, try to initialize high dpi rendering.
     if (font == &highdpi_font)

@@ -42,14 +42,18 @@ const char *TXT_DIRECTORY[] = { "__directory__", NULL };
 
 #ifndef _WIN32
 
-// #include <fcntl.h>
+#ifndef XBOX
+#include <fcntl.h>
+#endif
 #include <unistd.h>
 #include <errno.h>
-// #include <sys/wait.h>
+#ifndef XBOX
+#include <sys/wait.h>
+#endif
 
 static char *ExecReadOutput(char **argv)
 {
-#if 1
+#ifdef XBOX
     return NULL;
 #else
     char *result;

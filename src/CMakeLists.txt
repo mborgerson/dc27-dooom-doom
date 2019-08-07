@@ -66,10 +66,10 @@ set(GAME_SOURCE_FILES
                         i_swap.h
     i_midipipe.c        i_midipipe.h
     i_musicpack.c
-    #i_oplmusic.c
+    i_oplmusic.c
     i_pcsound.c
-    #i_sdlmusic.c
-    #i_sdlsound.c
+    i_sdlmusic.c
+    i_sdlsound.c
     i_sound.c           i_sound.h
     i_timer.c           i_timer.h
     i_video.c           i_video.h
