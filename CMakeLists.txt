@@ -1,4 +1,4 @@
-set(XBOX TRUE)
+# set(XBOX TRUE)
 
 if(XBOX)
 set(NXDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../nxdk")
