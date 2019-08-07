@@ -921,7 +921,7 @@ void I_InitWindowIcon(void)
                                        32, icon_w * 4,
                                        0xff << 24, 0xff << 16,
                                        0xff << 8, 0xff << 0);
-    assert(screen != NULL);
+    // assert(screen != NULL);
     SDL_SetWindowIcon(screen, surface);
     SDL_FreeSurface(surface);
 #endif
