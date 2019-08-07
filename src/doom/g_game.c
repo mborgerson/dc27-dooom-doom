@@ -937,7 +937,7 @@ void G_Ticker (void)
              && turbodetected[i])
             {
                 static char turbomessage[80];
-                extern char *player_names[4];
+                extern char *player_names[16];
                 M_snprintf(turbomessage, sizeof(turbomessage),
                            "%s is turbo!", player_names[i]);
                 players[consoleplayer].message = turbomessage;
@@ -1726,7 +1726,8 @@ void G_DoNewGame (void)
     netdemo = false;
     netgame = false;
     deathmatch = false;
-    playeringame[1] = playeringame[2] = playeringame[3] = 0;
+    // playeringame[1] = playeringame[2] = playeringame[3] = 0;
+    for (int i = 0; i < MAXPLAYERS; i++) playeringame[i] = 0;
     respawnparm = false;
     fastparm = false;
     nomonsters = false;

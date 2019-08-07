@@ -332,7 +332,7 @@ boolean NET_ReadFullTiccmd(net_packet_t *packet, net_full_ticcmd_t *cmd, boolean
 
     // Regenerate playeringame from the "header" bitfield
 
-    if (!NET_ReadInt8(packet, &bitfield))
+    if (!NET_ReadInt32(packet, &bitfield))
     {
         return false;
     }
@@ -380,7 +380,7 @@ void NET_WriteFullTiccmd(net_packet_t *packet, net_full_ticcmd_t *cmd, boolean l
         }
     }
     
-    NET_WriteInt8(packet, bitfield);
+    NET_WriteInt32(packet, bitfield);
 
     // Write player ticcmds
 
@@ -388,6 +388,7 @@ void NET_WriteFullTiccmd(net_packet_t *packet, net_full_ticcmd_t *cmd, boolean l
     {
         if (cmd->playeringame[i])
         {
+            printf("Sending tic to %d\n", i);
             NET_WriteTiccmdDiff(packet, &cmd->cmds[i], lowres_turn);
         }
     }

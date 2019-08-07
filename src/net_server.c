@@ -701,6 +701,8 @@ static void NET_SV_ParseSYN(net_packet_t *packet, net_client_t *client,
     // lowres_turn.  This is potentially desirable as the presence of such
     // clients affects turning resolution.
 
+    printf("num players = %d\n", num_players);
+
     // Adopt the game mode and mission of the first connecting client:
     if (num_players == 0 && !data.drone)
     {
@@ -1908,14 +1910,14 @@ void NET_SV_RegisterWithMaster(void)
     // Implies -server.
     //
 
-    if (!M_CheckParm("-privateserver"))
-    {
-        master_server = NET_Query_ResolveMaster(server_context);
-    }
-    else
-    {
+    // if (!M_CheckParm("-privateserver"))
+    // {
+    //     master_server = NET_Query_ResolveMaster(server_context);
+    // }
+    // else
+    // {
         master_server = NULL;
-    }
+    // }
 
     // Send request.
 

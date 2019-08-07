@@ -1660,6 +1660,17 @@ static default_t extra_defaults_list[] =
     //
 
     CONFIG_VARIABLE_KEY(key_multi_msgplayer8),
+    
+
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer9),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer10),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer11),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer12),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer13),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer14),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer15),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer16),
+
 };
 
 static default_collection_t extra_defaults =

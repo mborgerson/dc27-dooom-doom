@@ -252,6 +252,7 @@ static void NET_CL_ExpandFullTiccmd(net_full_ticcmd_t *cmd, unsigned int seq,
             // Use the ticcmd diff to patch the previous ticcmd to
             // the new ticcmd
 
+            // printf("player %d: ", i);
             NET_TiccmdPatch(&recvwindow_cmd_base[i], diff, &ticcmds[i]);
 
             // Store a copy for next time

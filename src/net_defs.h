@@ -34,7 +34,7 @@
 // This is the maximum supported by the networking code; individual games
 // have their own values for MAXPLAYERS that can be smaller.
 
-#define NET_MAXPLAYERS 8
+#define NET_MAXPLAYERS 16
 
 // Maximum length of a player's name.
 

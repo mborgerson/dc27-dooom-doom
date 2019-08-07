@@ -340,6 +340,7 @@ void D_BindVariables(void)
     key_multi_msgplayer[1] = HUSTR_KEYINDIGO;
     key_multi_msgplayer[2] = HUSTR_KEYBROWN;
     key_multi_msgplayer[3] = HUSTR_KEYRED;
+    // ?
 
     NET_BindVariables();
 
