@@ -3,7 +3,7 @@ if(XBOX)
     add_subdirectory(doom)
 else()
 ###### DON'T CARE FOR XBOX
-foreach(SUBDIR doom setup)
+foreach(SUBDIR doom)
     add_subdirectory("${SUBDIR}")
 endforeach()
 endif()
@@ -163,8 +163,6 @@ if(MSVC)
 endif()
 
 endif()
-
-# Source files needed for chocolate-setup:
 
 if(NOT XBOX)
 add_executable(midiread midifile.c z_native.c i_system.c m_argv.c m_misc.c d_iwad.c deh_str.c m_config.c)

@@ -90,7 +90,6 @@ configure_file(cmake/config.h.cin config.h)
 
 configure_file(src/resource.rc.in src/resource.rc)
 configure_file(src/setup-res.rc.in src/setup-res.rc)
-configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
 
 if(XBOX)
 foreach(SUBDIR textscreen pcsound src)
