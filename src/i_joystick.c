@@ -276,7 +276,9 @@ static int ReadButtonState(int vbutton)
     return SDL_JoystickGetButton(joystick, physbutton);
 }
 
+#ifdef XBOX
 #include <xboxkrnl/xboxkrnl.h>
+#endif
 
 // Get a bitmask of all currently-pressed buttons
 
@@ -295,11 +297,13 @@ static int GetButtonsState(void)
         }
     }
 
+#ifdef XBOX
 // Exit hack
     if (SDL_JoystickGetButton(joystick, 6)) {
         HalReturnToFirmware(HalRebootRoutine);
         while (1);
     }
+#endif
 
     return result;
 }
