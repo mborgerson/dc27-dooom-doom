@@ -39,16 +39,6 @@ typedef struct
     // villsa [STRIFE] according to the asm,
     // consistancy is a short, not a byte
     byte consistancy;           // checks for net game
-
-    // villsa - Strife specific:
-
-    byte buttons2;
-    int inventory;
-   
-    // Heretic/Hexen specific:
-
-    byte lookfly;               // look/fly up/down/centering
-    byte arti;                  // artitype_t to use
 } ticcmd_t;
 
 
