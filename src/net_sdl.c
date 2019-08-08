@@ -574,7 +574,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         memset(data, 0, length_expected + 4);
         data[length_expected] = '\xCC';
 
-        printf("length expected = %d bytes\n", length_expected);
+        // printf("length expected = %d bytes\n", length_expected);
 
         length_recv = SDLNet_TCP_Recv(tcpsocket, data, length_expected);
         if (length_recv != length_expected) {
@@ -591,7 +591,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         (*packet)->len = length_recv;
         free(data);
         
-        printf("received %d bytes\n", length_recv);
+        // printf("received %d bytes\n", length_recv);
 
         // checkme
         *addr = NET_SDL_FindAddress(SDLNet_TCP_GetPeerAddress(tcpsocket));
@@ -642,7 +642,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             added = 0;
             for (int i = 0; i < MAX_SOCKETS; i++) {
                 if(serverconnections[i] == NULL) {
-                    printf("adding newconn to %d\n", i);
+                    // printf("adding newconn to %d\n", i);
                     serverconnections[i] = newConnection;
                     SDLNet_TCP_AddSocket(serversocketSet, newConnection);
                     added = 1;
@@ -652,7 +652,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
             if(!added) {
                 // POTENTIAL DOS if one client takes up all available socket slots
-                printf("no free space to add socket\n");
+                // printf("no free space to add socket\n");
                 SDLNet_TCP_Close(newConnection);
             }
         }
@@ -662,7 +662,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             return false;
         }
 
-        printf("server receiving packet\n");
+        // printf("server receiving packet\n");
 
         // char data[MAX_PACKET_SIZE];
         // memset( data, 0, MAX_PACKET_SIZE );
@@ -681,14 +681,14 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             length_expected = 0;
             assert(sizeof(length_expected) == 4);
             length_recv = SDLNet_TCP_Recv(conn, length_expected_ptr, 4);
-            printf("received %d byte length field!\n", length_recv);
+            // printf("received %d byte length field!\n", length_recv);
             assert(length_expected_buf[256] == '\xCC');
             length_expected = *length_expected_ptr;
 
             if (length_recv < sizeof(length_expected)) {
                 // I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                 //         SDLNet_GetError());
-                printf("failed to recv, closing socket\n");
+                // printf("failed to recv, closing socket\n");
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
@@ -699,13 +699,13 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             memset(data, 0, length_expected + 4);
             data[length_expected] = '\xCC';
 
-            printf("length expected = %d bytes\n", length_expected);
+            // printf("length expected = %d bytes\n", length_expected);
 
             length_recv = SDLNet_TCP_Recv(conn, data, length_expected);
             if (length_recv < length_expected) {
                 // I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                 //         SDLNet_GetError());
-                printf("failed to recv, closing socket\n");
+                // printf("failed to recv, closing socket\n");
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
@@ -741,7 +741,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             (*packet)->len = length_recv;
 #endif
 
-            printf("received %d bytes\n", length_recv);
+            // printf("received %d bytes\n", length_recv);
 
             // check me
             remote = SDLNet_TCP_GetPeerAddress(conn);

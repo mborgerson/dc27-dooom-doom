@@ -486,8 +486,8 @@ P_TryMove
     int		oldside;
     line_t*	ld;
 
-    if (thing->player)
-    	    printf("%d\n", thing->player->cmd.angleturn);
+    // if (thing->player)
+    	    // printf("%d\n", thing->player->cmd.angleturn);
 
     floatok = false;
     if (!P_CheckPosition (thing, x, y))

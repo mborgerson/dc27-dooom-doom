@@ -388,7 +388,7 @@ void NET_WriteFullTiccmd(net_packet_t *packet, net_full_ticcmd_t *cmd, boolean l
     {
         if (cmd->playeringame[i])
         {
-            printf("Sending tic to %d\n", i);
+            // printf("Sending tic to %d\n", i);
             NET_WriteTiccmdDiff(packet, &cmd->cmds[i], lowres_turn);
         }
     }
