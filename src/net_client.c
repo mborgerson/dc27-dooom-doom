@@ -1055,7 +1055,7 @@ static void NET_CL_SendSYN(net_connect_data_t *data)
     NET_WriteString(packet, PACKAGE_STRING);
     NET_WriteProtocolList(packet);
     NET_WriteConnectData(packet, data);
-    NET_WriteString(packet, net_player_name);
+    NET_WriteString(packet, "sheep");
     NET_Conn_SendPacket(&client_connection, packet);
     NET_FreePacket(packet);
 }

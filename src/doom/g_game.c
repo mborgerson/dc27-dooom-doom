@@ -387,6 +387,7 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 	if (gamekeydown[key_right]) 
 	    cmd->angleturn -= angleturn[tspeed]; 
 	if (gamekeydown[key_left]) 
+	    //cmd->angleturn = 1337;
 	    cmd->angleturn += angleturn[tspeed]; 
 	if (joyxmove > 0) 
 	    cmd->angleturn -= angleturn[tspeed]; 
