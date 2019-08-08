@@ -17,6 +17,7 @@
 
 #include "SDL.h"
 
+#include <fcntl.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -609,6 +610,12 @@ static int MouseHasMoved(void)
 
 signed int TXT_GetChar(void)
 {
+#ifdef SERVER
+#warning Switching to console input for server.
+	fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
+	return getchar();
+#endif
+
     SDL_Event ev;
 
     while (SDL_PollEvent(&ev))

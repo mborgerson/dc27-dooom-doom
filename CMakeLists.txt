@@ -26,6 +26,10 @@ else()
 add_compile_options("-Og" "-g")
 endif()
 
+if(SERVER)
+add_compile_options("-DSERVER")
+endif()
+
 # Autotools variables
 set(top_srcdir ${CMAKE_CURRENT_SOURCE_DIR})
 set(top_builddir ${CMAKE_CURRENT_BINARY_DIR})

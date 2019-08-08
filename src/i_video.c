@@ -620,6 +620,11 @@ static void LimitTextureSize(int *w_upscale, int *h_upscale)
 
 static void CreateUpscaledTexture(boolean force)
 {
+#ifdef SERVER
+#warning Disabling textures for server.
+	return;
+#endif
+
     int w, h;
     int h_upscale, w_upscale;
     static int h_upscale_old, w_upscale_old;
