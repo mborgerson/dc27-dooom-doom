@@ -501,7 +501,7 @@ P_TryMove
         && thing->subsector->sector
         && thing->subsector->sector->tag == OOO_SECTOR_TAG
         && play_index < MAX_PLAYERS) {
-        printf("player %s standing in OOO sector", player_names[player_index]);
+        printf("score:%s", player_names[player_index]);
     }
 #endif /* SERVER */
 
