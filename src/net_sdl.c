@@ -40,13 +40,13 @@
 #endif
 
 #define DEFAULT_PORT 2342
-#define MAX_SOCKETS 32
+#define MAX_SOCKETS 128
 #define MAX_PACKET_SIZE 1500
 
 static boolean initted = false;
 static int port = DEFAULT_PORT;
 
-#define IS_TCP 0
+// #define IS_TCP 0
 
 #ifdef IS_TCP
 TCPsocket tcpsocket;
@@ -188,7 +188,7 @@ net_addr_t *NET_SDL_ResolveAddress(const char *address)
     }
     else
     {
-	addr_port = DEFAULT_PORT;
+	addr_port = port;
     }
     
     result = SDLNet_ResolveHost(&ip, addr_hostname, addr_port);
@@ -222,7 +222,6 @@ void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len)
                (host >> 24) & 0xff, (host >> 16) & 0xff,
                (host >> 8) & 0xff, host & 0xff);
 
-
     // If we are using the default port we just need to show the IP address,
     // but otherwise we need to include the port. This is important because
     // we use the string representation in the setup tool to provided an
@@ -240,7 +239,7 @@ static boolean NET_SDL_InitClient(void)
 {
 #ifdef IS_TCP
     int p;
-    Uint16 port = 0;
+    int port = 0;
     const char* host = "127.0.0.1";
 
     if (initted)
@@ -258,30 +257,31 @@ static boolean NET_SDL_InitClient(void)
     if (p > 0)
         port = atoi(myargv[p+1]);
 
+    if (port == 0) {
+        port = DEFAULT_PORT;
+    }
+
 
     p = M_CheckParmWithArgs("-connect", 1);
     if (p > 0)
         host = myargv[p+1];
 
-    //printf("host %s port %d\n", host, port);
+    printf("host %s, port %d\n", host, port);
 
     SDLNet_Init();
 
-    //udpsocket = SDLNet_UDP_Open(0);
     IPaddress ip;
     if(SDLNet_ResolveHost(&ip,host,port)==-1) {
         printf("NET_SDL_InitClient: SDLNet_ResolveHost ERROR");
     }
 
-    //printf("opening %s %d\n", host, ip.port);
+    //printf("opening\n");
     tcpsocket = SDLNet_TCP_Open(&ip);
 
     //printf("attempt made\n");
     if (tcpsocket == NULL)
     {
         I_Error("NET_SDL_InitClient: Unable to open a socket host: %x!", ip.host);
-        
-        //printf("NET_SDL_InitClient: Unable to open a socket host: %x!\n", ip.host);
     }
     
     //recvpacket = SDLNet_AllocPacket(1500);
@@ -290,9 +290,7 @@ static boolean NET_SDL_InitClient(void)
     srand(time(NULL));
 #endif
     serversocketSet = NULL;
-    clientsocketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
-    SDLNet_TCP_AddSocket( clientsocketSet, tcpsocket );
-
+    clientsocketSet = NULL;
     initted = true;
 
     return true;
@@ -339,7 +337,6 @@ static boolean NET_SDL_InitServer(void)
 {
 #ifdef IS_TCP
     int p;
-    Uint16 port = DEFAULT_PORT;
 
     if (initted)
         return true;
@@ -348,16 +345,17 @@ static boolean NET_SDL_InitServer(void)
     if (p > 0)
         port = atoi(myargv[p+1]);
 
+    port = DEFAULT_PORT;
+
     SDLNet_Init();
 
     //udpsocket = SDLNet_UDP_Open(port);
+    printf("binding to %d\n", port);
 
     IPaddress ip;
     if(SDLNet_ResolveHost(&ip,NULL,port)==-1) {
         printf("NET_SDL_InitServer: SDLNet_ResolveHost ERROR");
     }
-
-    //printf("opening server socket\n");
     tcpsocket = SDLNet_TCP_Open(&ip);
 
     if (tcpsocket == NULL)
@@ -365,26 +363,22 @@ static boolean NET_SDL_InitServer(void)
         I_Error("NET_SDL_InitServer: Unable to bind to port %i", port);
     }
 
-    //recvpacket = SDLNet_AllocPacket(1500);
+
 #ifdef DROP_PACKETS
     srand(time(NULL));
 #endif
 
-    clientsocketSet = NULL;
-    serversocketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);    
-    SDLNet_TCP_AddSocket( serversocketSet, tcpsocket );
+    serversocketSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
 
     for(int i = 0; i < MAX_SOCKETS; i++) {
         serverconnections[i] = NULL;
     }
-
 
     initted = true;
 
     return true;
 #else
     int p;
-    Uint16 port = DEFAULT_PORT;
 
     if (initted)
         return true;
@@ -417,42 +411,40 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
 {
 
 #ifdef IS_TCP
-    if(serversocketSet == NULL) { //is client
-        printf("sending %d bytes of data\n", packet->len);
-        if (!SDLNet_TCP_Send(tcpsocket, packet->data, packet->len))
-        {
+    if (serversocketSet == NULL) { // is client
+        int bytes_sent;
+
+        assert(tcpsocket != NULL);
+        bytes_sent = SDLNet_TCP_Send(tcpsocket, packet->data, packet->len);
+
+        if (bytes_sent < packet->len) {
             I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
                     SDLNet_GetError());
         }
-    }
-    else {
-        TCPsocket conn;
-        //char buf[80];
-        net_addr_t* conn_addr;
-
-        for (int i = 0; i < MAX_SOCKETS; i++)
-        {
-            conn = serverconnections[i];
+    } else {
+        //
+        // Server
+        //
+        int found = 0;
+        for (int i = 0; i < MAX_SOCKETS; i++) {
+            TCPsocket conn = serverconnections[i];
             if(conn != NULL) {
-                conn_addr = NET_SDL_FindAddress(SDLNet_TCP_GetPeerAddress(conn));
-                //NET_SDL_AddrToString(addr, buf, 80);
-                //printf("addr: %s\n", buf);
-
-	            //memset( buf, 0, 80);
-                //NET_SDL_AddrToString(conn_addr, buf, 80);
-                //printf("conn_addr: %s\n", buf);
-
-
+                // printf("sending data to %d\n", i);
+                net_addr_t* conn_addr = NET_SDL_FindAddress(SDLNet_TCP_GetPeerAddress(conn));
+                
                 if(conn_addr == addr) {
-                    //printf("sending %d bytes of data to %d\n", packet->len, i);
-                    if (!SDLNet_TCP_Send(conn, packet->data, packet->len))
-                    {
+                    int bytes_sent = SDLNet_TCP_Send(conn, packet->data, packet->len);
+
+                    if (bytes_sent < packet->len) {
                         I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
                                 SDLNet_GetError());
                     }
+                    found = 1;
+                    break;
                 }
             }
         }
+        assert(found);
     }
 #else
     UDPpacket sdl_packet;
@@ -516,14 +508,15 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             //printf("clientsocketSet not init\n");
             return false; //error, clientsocketSet not init
         }
-        int numClientActiveConnections = SDLNet_CheckSockets( clientsocketSet, 1 );
+        int numClientActiveConnections = SDLNet_CheckSockets( clientsocketSet, 100 );
 
         //printf("client trying to recv packet\n");
         if(numClientActiveConnections > 0) {
             //printf("client has connections\n");
-            //while(SDLNet_SocketReady(tcpsocket) == 0)
-            //    continue;
-            //    return false;
+            if(SDLNet_SocketReady(tcpsocket) == 0) {
+                printf("socket not ready\n");
+                return false;
+            }
             //printf("client recv packet\n");
             
             //SDLNet_TCP_AddSocket( clientsocketSet, newConnection );
@@ -532,13 +525,12 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
    
             length_recv = SDLNet_TCP_Recv(tcpsocket, data, MAX_PACKET_SIZE);
 
-            printf("received %d bytes\n", length_recv);
-
             if (length_recv < 0)
             {
                 I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                         SDLNet_GetError());
             }
+            //printf("received %d bytes\n", length_recv);
             // no packets received
 
             if (length_recv == 0) {
@@ -555,9 +547,10 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
             net_addr_t* peer_ip = NET_SDL_FindAddress(SDLNet_TCP_GetPeerAddress(tcpsocket));
 
+            *addr = NET_SDL_FindAddress(&recvpacket->address);
+
 	        memset( peer_host_name_buffer, 0, 80 );
             NET_SDL_AddrToString(peer_ip, peer_host_name_buffer, 80);        
-
             //printf("peer_hostname %s\n", peer_host_name_buffer); 
             for(int i = 0; i < 80; i++) {
                 char c = peer_host_name_buffer[i];
@@ -573,8 +566,8 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             //printf("peer_ip_string%s\n", peer_host_name_buffer);
     
             *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
-            if(*addr != NULL) 
-                printf("    -> recv packet from %s\n", NET_AddrToString(*addr));
+            //if(*addr != NULL) 
+            //    printf("recv packet from %s\n", NET_AddrToString(*addr));
 
             return true;
 
@@ -583,10 +576,9 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
     }
     else { //is server
 
-        int numServerActiveConnections = SDLNet_CheckSockets( serversocketSet, 1 );
+        int numServerActiveConnections = SDLNet_CheckSockets( serversocketSet, 10 );
 
         if(numServerActiveConnections > 0) {
-            //printf("active conn\n");
             
             TCPsocket newConnection = SDLNet_TCP_Accept( tcpsocket );
             if(newConnection != NULL) {
@@ -624,17 +616,17 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 {
                     I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                             SDLNet_GetError());
-                    serverconnections[i] = NULL;
                 }
-
-                //printf("received %d bytes\n", length_recv);
-            
-                *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
+    
+            *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
 
                 // no packets received
-                if (length_recv <= 0) {
+                if (length_recv == 0) {
                     //printf("empty packets %d\n", i);
                     serverconnections[i] = NULL;
+                    //if(conn != NULL) {
+                    //   SDLNet_TCP_DelSocket( serversocketSet, conn );
+                    //}
                     return false;
                 }
 
