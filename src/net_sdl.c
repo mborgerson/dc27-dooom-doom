@@ -40,13 +40,13 @@
 #endif
 
 #define DEFAULT_PORT 2342
-#define MAX_SOCKETS 128
+#define MAX_SOCKETS 32
 #define MAX_PACKET_SIZE 1500
 
 static boolean initted = false;
 static int port = DEFAULT_PORT;
 
-//#define IS_TCP 0
+#define IS_TCP 0
 
 #ifdef IS_TCP
 TCPsocket tcpsocket;
@@ -188,7 +188,7 @@ net_addr_t *NET_SDL_ResolveAddress(const char *address)
     }
     else
     {
-	addr_port = port;
+	addr_port = DEFAULT_PORT;
     }
     
     result = SDLNet_ResolveHost(&ip, addr_hostname, addr_port);
@@ -222,6 +222,7 @@ void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len)
                (host >> 24) & 0xff, (host >> 16) & 0xff,
                (host >> 8) & 0xff, host & 0xff);
 
+
     // If we are using the default port we just need to show the IP address,
     // but otherwise we need to include the port. This is important because
     // we use the string representation in the setup tool to provided an
@@ -239,7 +240,7 @@ static boolean NET_SDL_InitClient(void)
 {
 #ifdef IS_TCP
     int p;
-    int port = 0;
+    Uint16 port = 0;
     const char* host = "127.0.0.1";
 
     if (initted)
@@ -262,7 +263,7 @@ static boolean NET_SDL_InitClient(void)
     if (p > 0)
         host = myargv[p+1];
 
-    printf("host %s\n", host);
+    //printf("host %s port %d\n", host, port);
 
     SDLNet_Init();
 
@@ -272,13 +273,15 @@ static boolean NET_SDL_InitClient(void)
         printf("NET_SDL_InitClient: SDLNet_ResolveHost ERROR");
     }
 
-    //printf("opening\n");
+    //printf("opening %s %d\n", host, ip.port);
     tcpsocket = SDLNet_TCP_Open(&ip);
 
     //printf("attempt made\n");
     if (tcpsocket == NULL)
     {
         I_Error("NET_SDL_InitClient: Unable to open a socket host: %x!", ip.host);
+        
+        //printf("NET_SDL_InitClient: Unable to open a socket host: %x!\n", ip.host);
     }
     
     //recvpacket = SDLNet_AllocPacket(1500);
@@ -336,6 +339,7 @@ static boolean NET_SDL_InitServer(void)
 {
 #ifdef IS_TCP
     int p;
+    Uint16 port = DEFAULT_PORT;
 
     if (initted)
         return true;
@@ -352,6 +356,8 @@ static boolean NET_SDL_InitServer(void)
     if(SDLNet_ResolveHost(&ip,NULL,port)==-1) {
         printf("NET_SDL_InitServer: SDLNet_ResolveHost ERROR");
     }
+
+    //printf("opening server socket\n");
     tcpsocket = SDLNet_TCP_Open(&ip);
 
     if (tcpsocket == NULL)
@@ -378,6 +384,7 @@ static boolean NET_SDL_InitServer(void)
     return true;
 #else
     int p;
+    Uint16 port = DEFAULT_PORT;
 
     if (initted)
         return true;
@@ -496,13 +503,13 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             //printf("clientsocketSet not init\n");
             return false; //error, clientsocketSet not init
         }
-        int numClientActiveConnections = SDLNet_CheckSockets( clientsocketSet, 100 );
+        int numClientActiveConnections = SDLNet_CheckSockets( clientsocketSet, 5 );
 
         //printf("client trying to recv packet\n");
         if(numClientActiveConnections > 0) {
             //printf("client has connections\n");
-            if(SDLNet_SocketReady(tcpsocket) == 0)
-                return false;
+            //if(SDLNet_SocketReady(tcpsocket) == 0)
+            //    return false;
             //printf("client recv packet\n");
             
             //SDLNet_TCP_AddSocket( clientsocketSet, newConnection );
@@ -560,9 +567,10 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
     }
     else { //is server
 
-        int numServerActiveConnections = SDLNet_CheckSockets( serversocketSet, 10 );
+        int numServerActiveConnections = SDLNet_CheckSockets( serversocketSet, 5 );
 
         if(numServerActiveConnections > 0) {
+            //printf("active conn\n");
             
             TCPsocket newConnection = SDLNet_TCP_Accept( tcpsocket );
             if(newConnection != NULL) {
@@ -601,8 +609,10 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                     I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                             SDLNet_GetError());
                 }
-    
-            *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
+
+                //printf("received %d bytes\n", length_recv);
+            
+                *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
 
                 // no packets received
                 if (length_recv == 0) {
