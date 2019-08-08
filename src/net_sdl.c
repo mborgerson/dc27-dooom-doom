@@ -418,7 +418,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
 
 #ifdef IS_TCP
     if(serversocketSet == NULL) { //is client
-        //printf("sending %d bytes of data", packet->len);
+        printf("sending %d bytes of data\n", packet->len);
         if (!SDLNet_TCP_Send(tcpsocket, packet->data, packet->len))
         {
             I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
@@ -521,7 +521,8 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         //printf("client trying to recv packet\n");
         if(numClientActiveConnections > 0) {
             //printf("client has connections\n");
-            //if(SDLNet_SocketReady(tcpsocket) == 0)
+            //while(SDLNet_SocketReady(tcpsocket) == 0)
+            //    continue;
             //    return false;
             //printf("client recv packet\n");
             
@@ -536,7 +537,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                         SDLNet_GetError());
             }
-            //printf("received %d bytes\n", length_recv);
+            printf("received %d bytes\n", length_recv);
             // no packets received
 
             if (length_recv == 0) {
@@ -621,6 +622,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 {
                     I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                             SDLNet_GetError());
+                    serverconnections[i] = NULL;
                 }
 
                 //printf("received %d bytes\n", length_recv);
@@ -628,12 +630,9 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
 
                 // no packets received
-                if (length_recv == 0) {
+                if (length_recv <= 0) {
                     //printf("empty packets %d\n", i);
                     serverconnections[i] = NULL;
-                    //if(conn != NULL) {
-                    //   SDLNet_TCP_DelSocket( serversocketSet, conn );
-                    //}
                     return false;
                 }
 
