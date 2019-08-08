@@ -39,6 +39,8 @@
 // Data.
 #include "sounds.h"
 
+#define OOO_SECTOR_TAG 777
+
 // Spechit overrun magic value.
 //
 // This is the value used by PrBoom-plus.  I think the value below is 
@@ -486,8 +488,22 @@ P_TryMove
     int		oldside;
     line_t*	ld;
 
-    if (thing->player)
-    	    printf("%d\n", thing->player->cmd.angleturn);
+#if SERVER == 1
+    extern char *player_names[MAXPLAYERS];
+    extern player_t players[MAXPLAYERS];
+    int player_index = 0;
+
+    // Super hacky, run through the players to obtain an index for the current player.
+    for (i=0 ; i<MAXPLAYERS && &players[i] == thing->player; i++) {}
+
+    if (   thing->player
+        && thing->subsector
+        && thing->subsector->sector
+        && thing->subsector->sector->tag == OOO_SECTOR_TAG
+        && play_index < MAX_PLAYERS) {
+        printf("player %s standing in OOO sector", player_names[player_index]);
+    }
+#endif /* SERVER */
 
     floatok = false;
     if (!P_CheckPosition (thing, x, y))
