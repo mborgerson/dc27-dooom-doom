@@ -457,7 +457,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
                     int bytes_sent;
 
                     uint32_t length = packet->len;
-                    bytes_sent = SDLNet_TCP_Send(tcpsocket, &length, sizeof(length));
+                    bytes_sent = SDLNet_TCP_Send(conn, &length, sizeof(length));
                     if (bytes_sent < sizeof(length)) {
                         I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
                                 SDLNet_GetError());
@@ -561,7 +561,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         length_expected = 0;
         length_recv = SDLNet_TCP_Recv(tcpsocket, &length_expected, sizeof(length_expected));
         if (length_recv < sizeof(length_expected)) {
-            I_Error("NET_SDL_SendPacket: Error receiving packet: %s",
+            I_Error("NET_SDL_SendPacket: Error receiving packet 1: %s",
                     SDLNet_GetError());
 
             // FIXME: add reconnect if socket is broken
@@ -572,18 +572,18 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
         data = malloc(length_expected + 4);
         memset(data, 0, length_expected + 4);
-        data[length_expected] = 0xCC;
+        data[length_expected] = '\xCC';
 
         printf("length expected = %d bytes\n", length_expected);
 
         length_recv = SDLNet_TCP_Recv(tcpsocket, data, length_expected);
         if (length_recv != length_expected) {
-            I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
+            I_Error("NET_SDL_RecvPacket: Error receiving packet 2: %s",
                     SDLNet_GetError());
             // NET_FreePacket(*packet);
         }
 
-        assert(data[length_expected] == 0xCC);
+        assert(data[length_expected] == '\xCC');
 
         *packet = NET_NewPacket(length_expected);
         assert(*packet != NULL);
@@ -674,15 +674,15 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 continue;
             }
 
-            char length_expected_buf[MAX_PACKET_SIZE+1];
+            char length_expected_buf[256+1];
             uint32_t *length_expected_ptr = (uint32_t *)length_expected_buf;
-            length_expected_buf[sizeof(length_expected_buf)-1] = 0xCC;
+            length_expected_buf[256] = '\xCC';
 
             length_expected = 0;
             assert(sizeof(length_expected) == 4);
             length_recv = SDLNet_TCP_Recv(conn, length_expected_ptr, 4);
             printf("received %d byte length field!\n", length_recv);
-            assert(length_expected_buf[sizeof(length_expected_buf)-1] == 0xCC);
+            assert(length_expected_buf[256] == '\xCC');
             length_expected = *length_expected_ptr;
 
             if (length_recv < sizeof(length_expected)) {
@@ -697,10 +697,9 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
             data = malloc(length_expected + 4);
             memset(data, 0, length_expected + 4);
-            data[length_expected] = 0xCC;
+            data[length_expected] = '\xCC';
 
             printf("length expected = %d bytes\n", length_expected);
-
 
             length_recv = SDLNet_TCP_Recv(conn, data, length_expected);
             if (length_recv < length_expected) {
@@ -715,7 +714,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 continue; // Check other sockets
             }
 
-            assert(data[length_expected] == 0xCC);
+            assert(data[length_expected] == '\xCC');
 
             *packet = NET_NewPacket(length_expected);
             assert(*packet != NULL);
