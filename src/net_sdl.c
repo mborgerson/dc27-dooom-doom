@@ -532,12 +532,13 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
    
             length_recv = SDLNet_TCP_Recv(tcpsocket, data, MAX_PACKET_SIZE);
 
+            printf("received %d bytes\n", length_recv);
+
             if (length_recv < 0)
             {
                 I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                         SDLNet_GetError());
             }
-            printf("received %d bytes\n", length_recv);
             // no packets received
 
             if (length_recv == 0) {
@@ -556,6 +557,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
 	        memset( peer_host_name_buffer, 0, 80 );
             NET_SDL_AddrToString(peer_ip, peer_host_name_buffer, 80);        
+
             //printf("peer_hostname %s\n", peer_host_name_buffer); 
             for(int i = 0; i < 80; i++) {
                 char c = peer_host_name_buffer[i];
@@ -571,8 +573,8 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             //printf("peer_ip_string%s\n", peer_host_name_buffer);
     
             *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
-            //if(*addr != NULL) 
-            //    printf("recv packet from %s\n", NET_AddrToString(*addr));
+            if(*addr != NULL) 
+                printf("    -> recv packet from %s\n", NET_AddrToString(*addr));
 
             return true;
 
