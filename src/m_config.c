@@ -1660,6 +1660,33 @@ static default_t extra_defaults_list[] =
     //
 
     CONFIG_VARIABLE_KEY(key_multi_msgplayer8),
+    
+
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer9),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer10),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer11),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer12),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer13),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer14),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer15),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer16),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer17),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer18),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer19),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer20),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer21),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer22),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer23),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer24),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer25),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer26),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer27),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer28),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer29),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer30),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer31),
+    CONFIG_VARIABLE_KEY(key_multi_msgplayer32),
+
 };
 
 static default_collection_t extra_defaults =

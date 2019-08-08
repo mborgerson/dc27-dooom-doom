@@ -22,6 +22,8 @@ add_compile_options("-target" "i386-pc-win32" "-march=pentium3"
 	"-Wno-ignored-attributes" "-DNXDK" "-DXBOX" "-D__STDC__" "-U _MSC_VER" "-U __WIN32__" "-U _WIN32"
     "-Werror=implicit"
 	"-g" "-gdwarf-4")
+else()
+add_compile_options("-Og" "-g")
 endif()
 
 # Autotools variables

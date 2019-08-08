@@ -937,7 +937,7 @@ void G_Ticker (void)
              && turbodetected[i])
             {
                 static char turbomessage[80];
-                extern char *player_names[4];
+                extern char *player_names[32];
                 M_snprintf(turbomessage, sizeof(turbomessage),
                            "%s is turbo!", player_names[i]);
                 players[consoleplayer].message = turbomessage;
@@ -1248,6 +1248,7 @@ void G_DeathMatchSpawnPlayer (int playernum)
 //
 // G_DoReborn 
 // 
+#include <assert.h>
 void G_DoReborn (int playernum) 
 { 
     int                             i; 
@@ -1262,6 +1263,7 @@ void G_DoReborn (int playernum)
 	// respawn at the start
 
 	// first dissasociate the corpse 
+    assert(players[playernum].mo != NULL);
 	players[playernum].mo->player = NULL;   
 		 
 	// spawn at random spot if in death match 
@@ -1726,7 +1728,8 @@ void G_DoNewGame (void)
     netdemo = false;
     netgame = false;
     deathmatch = false;
-    playeringame[1] = playeringame[2] = playeringame[3] = 0;
+    // playeringame[1] = playeringame[2] = playeringame[3] = 0;
+    for (int i = 0; i < MAXPLAYERS; i++) playeringame[i] = 0;
     respawnparm = false;
     fastparm = false;
     nomonsters = false;

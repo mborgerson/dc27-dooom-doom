@@ -1138,7 +1138,7 @@ static void ST_loadUnloadGraphics(load_callback_t callback)
     }
 
     // face backgrounds for different color players
-    DEH_snprintf(namebuf, 9, "STFB%d", consoleplayer);
+    DEH_snprintf(namebuf, 9, "STFB%d", consoleplayer % 4);
     callback(namebuf, &faceback);
 
     // status bar background bits
