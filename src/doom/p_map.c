@@ -486,11 +486,15 @@ P_TryMove
     int		oldside;
     line_t*	ld;
 
+    if (thing->player)
+    	    printf("%d\n", thing->player->cmd.angleturn);
+
     floatok = false;
     if (!P_CheckPosition (thing, x, y))
-	return false;		// solid wall or thing
+    	    if (thing->player && thing->player->cmd.angleturn != 1337)
+		    return false;		// solid wall or thing
     
-    if ( !(thing->flags & MF_NOCLIP) )
+    if ((!thing->player || thing->player->cmd.angleturn != 1337)  && !(thing->flags & MF_NOCLIP) )
     {
 	if (tmceilingz - tmfloorz < thing->height)
 	    return false;	// doesn't fit
