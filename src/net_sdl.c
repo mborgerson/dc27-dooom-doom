@@ -46,7 +46,7 @@
 static boolean initted = false;
 static int port = DEFAULT_PORT;
 
-//#define IS_TCP 0
+#define IS_TCP 0
 
 #ifdef IS_TCP
 TCPsocket tcpsocket;
@@ -418,6 +418,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
 
 #ifdef IS_TCP
     if(serversocketSet == NULL) { //is client
+        //printf("sending %d bytes of data", packet->len);
         if (!SDLNet_TCP_Send(tcpsocket, packet->data, packet->len))
         {
             I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
@@ -425,13 +426,25 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
         }
     }
     else {
+        TCPsocket conn;
+        //char buf[80];
+        net_addr_t* conn_addr;
+
         for (int i = 0; i < MAX_SOCKETS; i++)
         {
-            TCPsocket conn = serverconnections[i];
+            conn = serverconnections[i];
             if(conn != NULL) {
-                //printf("sending data to %d\n", i);
-                net_addr_t* conn_addr = NET_SDL_FindAddress(SDLNet_TCP_GetPeerAddress(conn));
+                conn_addr = NET_SDL_FindAddress(SDLNet_TCP_GetPeerAddress(conn));
+                //NET_SDL_AddrToString(addr, buf, 80);
+                //printf("addr: %s\n", buf);
+
+	            //memset( buf, 0, 80);
+                //NET_SDL_AddrToString(conn_addr, buf, 80);
+                //printf("conn_addr: %s\n", buf);
+
+
                 if(conn_addr == addr) {
+                    //printf("sending %d bytes of data to %d\n", packet->len, i);
                     if (!SDLNet_TCP_Send(conn, packet->data, packet->len))
                     {
                         I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
@@ -503,7 +516,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             //printf("clientsocketSet not init\n");
             return false; //error, clientsocketSet not init
         }
-        int numClientActiveConnections = SDLNet_CheckSockets( clientsocketSet, 5 );
+        int numClientActiveConnections = SDLNet_CheckSockets( clientsocketSet, 1 );
 
         //printf("client trying to recv packet\n");
         if(numClientActiveConnections > 0) {
@@ -567,7 +580,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
     }
     else { //is server
 
-        int numServerActiveConnections = SDLNet_CheckSockets( serversocketSet, 5 );
+        int numServerActiveConnections = SDLNet_CheckSockets( serversocketSet, 1 );
 
         if(numServerActiveConnections > 0) {
             //printf("active conn\n");
