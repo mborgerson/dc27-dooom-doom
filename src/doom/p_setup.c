@@ -102,7 +102,7 @@ byte*		rejectmatrix;
 
 
 // Maintain single and multi player starting spots.
-#define MAX_DEATHMATCH_STARTS	16
+#define MAX_DEATHMATCH_STARTS	32
 
 mapthing_t	deathmatchstarts[MAX_DEATHMATCH_STARTS];
 mapthing_t*	deathmatch_p;

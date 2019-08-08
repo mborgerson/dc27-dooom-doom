@@ -116,7 +116,7 @@ int key_spy = KEY_F12;
 // Multiplayer chat keys:
 
 int key_multi_msg = 't';
-int key_multi_msgplayer[16]; // MAXPLAYERS!!!
+int key_multi_msgplayer[32]; // MAXPLAYERS!!!
 
 // Weapon selection keys:
 
