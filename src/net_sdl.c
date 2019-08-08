@@ -46,7 +46,7 @@
 static boolean initted = false;
 static int port = DEFAULT_PORT;
 
-#define IS_TCP 0
+//#define IS_TCP 0
 
 #ifdef IS_TCP
 TCPsocket tcpsocket;
