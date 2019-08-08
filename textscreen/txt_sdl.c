@@ -17,7 +17,10 @@
 
 #include "SDL.h"
 
+#ifndef XBOX
 #include <fcntl.h>
+#endif
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -610,10 +613,12 @@ static int MouseHasMoved(void)
 
 signed int TXT_GetChar(void)
 {
+#ifndef XBOX
 #ifdef SERVER
 #warning Switching to console input for server.
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
 	return getchar();
+#endif
 #endif
 
     SDL_Event ev;
