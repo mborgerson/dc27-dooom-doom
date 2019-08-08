@@ -616,6 +616,9 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         // 
 
         while (1) {
+
+            assert(tcpsocket != NULL);
+
             // Check for new connections
             TCPsocket newConnection = SDLNet_TCP_Accept(tcpsocket);
             if (newConnection == NULL) {
@@ -647,7 +650,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             return false;
         }
 
-        //printf("server receiving packet\n");
+        printf("server receiving packet\n");
 
         // char data[MAX_PACKET_SIZE];
         // memset( data, 0, MAX_PACKET_SIZE );
@@ -674,8 +677,9 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             *packet = NET_NewPacket(length_recv); //result == size of msg received
             assert(*packet != NULL);
 
+            printf("receiving %d bytes\n", length_expected);
             length_recv = SDLNet_TCP_Recv(conn, (*packet)->data, length_expected);
-            if (length_recv < length_expected) {
+            if (length_recv != length_expected) {
                 // I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                 //         SDLNet_GetError());
                 printf("failed to recv, closing socket\n");
