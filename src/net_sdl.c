@@ -83,6 +83,11 @@ static void NET_SDL_InitAddrTable(void)
     memset(addr_table, 0, sizeof(addrpair_t *) * addr_table_size);
 }
 
+static boolean HostAddressEqual(IPaddress *a, IPaddress *b) //no port
+{
+    return a->host == b->host;
+}
+
 static boolean AddressesEqual(IPaddress *a, IPaddress *b)
 {
     return a->host == b->host
@@ -646,6 +651,19 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             if (newConnection == NULL) {
                 // No pending connections
                 break;
+            }
+
+            //check if already present
+            remote = SDLNet_TCP_GetPeerAddress(newConnection);
+            printf("");
+            for (int i = 0; i < MAX_SOCKETS; i++) {
+                if(serverconnections[i] != NULL) {
+                    if(HostAddressEqual(remote, SDLNet_TCP_GetPeerAddress(serverconnections[i]))) {
+                        //printf("already have old conn in %d, rejecting\n", i);
+                        SDLNet_TCP_Close(newConnection);
+                        return false;
+                    }
+                }
             }
 
             //printf("adding new connection\n");
