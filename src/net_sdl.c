@@ -591,6 +591,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             I_Error("NET_SDL_RecvPacket: Error receiving packet 2: %s",
                     SDLNet_GetError());
             // NET_FreePacket(*packet);
+            free(data);
         }
 
         assert(data[length_expected] == '\xCC');
