@@ -25,6 +25,7 @@
 #include "doomstat.h"
 
 #define OOO_SECTOR_TAG 777
+#define OOO_DMG_SECTOR_TAG 888
 
 int	leveltime;
 
@@ -149,6 +150,12 @@ void P_Ticker (void)
         #if SERVER == 1
             if (players[i].mo->subsector->sector->tag == OOO_SECTOR_TAG) {
                 printf("SCORING %s %d %d\n", sv_player_names[i], players[i].mo->x, players[i].mo->y);
+            }
+            // Once a second, deal 5 damage when inside small hidden ooo sector.
+            // Damage-dealing sectors appear bugged, dealing damage once per entry to a sector.
+            if (   players[i].mo->subsector->sector->tag == OOO_DMG_SECTOR_TAG
+                   && !(leveltime % 35)) {
+                P_DamageMobj(players[i].mo, NULL, NULL, 5);
             }
         #endif /* SERVER */
 
