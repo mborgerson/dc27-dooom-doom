@@ -487,12 +487,13 @@ P_TryMove
     int		side;
     int		oldside;
     line_t*	ld;
+    int i;
 
     // if (thing->player)
     	    // printf("%d\n", thing->player->cmd.angleturn);
 #if SERVER == 1
     extern char *player_names[MAXPLAYERS];
-    extern player_t players[MAXPLAYERS];
+    // extern player_t players[MAXPLAYERS];
     int player_index = 0;
 
     // Super hacky, run through the players to obtain an index for the current player.
@@ -502,7 +503,7 @@ P_TryMove
         && thing->subsector
         && thing->subsector->sector
         && thing->subsector->sector->tag == OOO_SECTOR_TAG
-        && play_index < MAX_PLAYERS) {
+        && player_index < MAXPLAYERS) {
         printf("score:%s", player_names[player_index]);
     }
 #endif /* SERVER */

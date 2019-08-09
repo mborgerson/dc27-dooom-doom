@@ -333,7 +333,7 @@ void I_Error (const char *error, ...)
 
     // abort();
 
-    while(1);
+    // while(1);
 
     SDL_Quit();
 
