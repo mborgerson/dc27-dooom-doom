@@ -822,7 +822,8 @@ void I_FinishUpdate (void)
     SDL_SetRenderTarget(renderer, NULL);
     SDL_RenderCopy(renderer, texture_upscaled, NULL, NULL);
 #else
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_Rect rect = {10,5,300,235};
+    SDL_RenderCopy(renderer, texture, NULL, &rect);
 #endif
 
     // Draw!

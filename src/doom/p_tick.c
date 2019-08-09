@@ -24,8 +24,6 @@
 
 #include "doomstat.h"
 
-#define OOO_SECTOR_TAG 777
-
 int	leveltime;
 
 //
@@ -118,7 +116,17 @@ void P_RunThinkers (void)
     }
 }
 
+#define OOO_SECTOR_TAG1 777
+#define OOO_SECTOR_TAG2 778
+#define OOO_DMG_SECTOR_TAG 888
 
+boolean is_ooo_sector_tag(short sector_tag) {
+    return (sector_tag == OOO_SECTOR_TAG1) || (sector_tag == OOO_SECTOR_TAG2) || (sector_tag == OOO_DMG_SECTOR_TAG);
+}
+
+short player_sector_tag(player_t *player) {
+    return player->mo->subsector->sector->tag;
+}
 
 //
 // P_Ticker
@@ -146,11 +154,17 @@ void P_Ticker (void)
 	if (playeringame[i]) {
 	    P_PlayerThink (&players[i]);
 
+            short sector_tag = player_sector_tag(&players[i]);
         #if SERVER == 1
-            if (players[i].mo->subsector->sector->tag == OOO_SECTOR_TAG) {
-                printf("SCORING %s %d %d\n", sv_player_names[i], players[i].mo->x, players[i].mo->y);
+            if (is_ooo_sector_tag(sector_tag)) {
+                printf("SCORING %s %hd\n", sv_player_names[i], sector_tag);
             }
         #endif /* SERVER */
+            // Once a second, deal 5 damage when inside small hidden ooo sector.
+            // Damage-dealing sectors appear bugged, dealing damage once per entry to a sector.
+            if (sector_tag == OOO_DMG_SECTOR_TAG && !(leveltime % 35)) {
+                P_DamageMobj(players[i].mo, NULL, NULL, 5);
+            }
 
         }
 
