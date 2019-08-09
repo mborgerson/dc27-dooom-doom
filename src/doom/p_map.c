@@ -38,6 +38,7 @@
 #include "r_state.h"
 // Data.
 #include "sounds.h"
+#include "../net_server.h"
 
 #define OOO_SECTOR_TAG 777
 
@@ -492,6 +493,12 @@ P_TryMove
     // if (thing->player)
     	    // printf("%d\n", thing->player->cmd.angleturn);
 #if SERVER == 1
+
+    extern char  *sv_player_names[NET_MAXPLAYERS];
+    for (int i=0 ; i<MAXPLAYERS && sv_player_names[i]!=NULL ; i++) {
+        printf("player name %s for index %d\n", sv_player_names[i], i);
+    }
+    
     extern char *player_names[MAXPLAYERS];
     // extern player_t players[MAXPLAYERS];
     int player_index = 0;
