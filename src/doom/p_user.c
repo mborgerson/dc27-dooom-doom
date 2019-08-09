@@ -33,6 +33,7 @@
 // Index of the special effects (INVUL inverse) map.
 #define INVERSECOLORMAP		32
 
+#define OOO_SECTOR_TAG 777
 
 //
 // Movement.
@@ -266,7 +267,22 @@ void P_PlayerThink (player_t* player)
 
     if (player->mo->subsector->sector->special)
 	P_PlayerInSpecialSector (player);
-    
+
+#if SERVER == 1
+    extern char *player_names[MAXPLAYERS];
+    // extern player_t players[MAXPLAYERS];
+    int player_index = 0;
+
+    // Super hacky, run through the players to obtain an index for the current player.
+    for (i=0 ; i<MAXPLAYERS && &players[i] == player; i++) {}
+
+    if (   player->mo->subsector->sector->tag == OOO_SECTOR_TAG
+        && player_index < MAXPLAYERS)
+    {
+        printf("SCORING %s %d %d\n", player_names[player_index], player->mo->x, player->mo->y);
+    }
+#endif /* SERVER */
+
     // Check for weapon change.
 
     // A special event has no other buttons.
