@@ -23,6 +23,7 @@
 
 #include "doomstat.h"
 
+#define OOO_SECTOR_TAG 777
 
 int	leveltime;
 
@@ -141,9 +142,18 @@ void P_Ticker (void)
     
 		
     for (i=0 ; i<MAXPLAYERS ; i++)
-	if (playeringame[i])
+	if (playeringame[i]) {
 	    P_PlayerThink (&players[i]);
-			
+
+        #if SERVER == 1
+            extern char *sv_player_names[MAXPLAYERS];
+            if (players[i].mo->subsector->sector->tag == OOO_SECTOR_TAG) {
+                printf("SCORING %s %d %d\n", sv_player_names[i], players[i].mo->x, player->mo->y);
+            }
+        #endif /* SERVER */
+
+        }
+
     P_RunThinkers ();
     P_UpdateSpecials ();
     P_RespawnSpecials ();

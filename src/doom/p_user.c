@@ -268,22 +268,6 @@ void P_PlayerThink (player_t* player)
     if (player->mo->subsector->sector->special)
 	P_PlayerInSpecialSector (player);
 
-#if SERVER == 1
-    extern char *player_names[MAXPLAYERS];
-    // extern player_t players[MAXPLAYERS];
-    int i;
-
-    // Super hacky, run through the players to obtain an index for the current player.
-    for (i = 0; i < MAXPLAYERS; i++) {
-    	if (&players[i] == player) { // Find index of current player
-    		if (player->mo->subsector->sector->tag == OOO_SECTOR_TAG) {
-    			printf("SCORING %s %d %d\n", player_names[i], player->mo->x, player->mo->y);
-    		}
-    		break;
-    	}
-    }
-#endif /* SERVER */
-
     // Check for weapon change.
 
     // A special event has no other buttons.
