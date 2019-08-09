@@ -45,6 +45,7 @@
 #define DEFAULT_PORT 2342
 #define MAX_SOCKETS 32
 #define MAX_PACKET_SIZE 1500
+#define HAPROXY_MAX_BUF 108
 
 static boolean initted = false;
 static int port = DEFAULT_PORT;
@@ -55,6 +56,7 @@ static int port = DEFAULT_PORT;
 TCPsocket tcpsocket;
 
 TCPsocket serverconnections[MAX_SOCKETS];
+uint32_t actual_ip_list[MAX_SOCKETS];
 
 SDLNet_SocketSet clientsocketSet;
 SDLNet_SocketSet serversocketSet;
@@ -83,15 +85,52 @@ static void NET_SDL_InitAddrTable(void)
     memset(addr_table, 0, sizeof(addrpair_t *) * addr_table_size);
 }
 
-static boolean HostAddressEqual(IPaddress *a, IPaddress *b) //no port
-{
-    return a->host == b->host;
-}
-
 static boolean AddressesEqual(IPaddress *a, IPaddress *b)
 {
     return a->host == b->host
         && a->port == b->port;
+}
+
+uint32_t ipStringToAddr(char* ip_string)
+{
+    char packet[strlen(ip_string)];
+    uint32_t ipaddr = 0;
+    uint32_t iparray[4];
+
+    memset(packet, 0, strlen(ip_string));
+    memcpy(packet, ip_string, strlen(ip_string));
+
+    sscanf(packet, "%d.%d.%d.%d", &iparray[0],&iparray[1],&iparray[2],&iparray[3]);
+
+    for(int i = 0; i < 4; i++) {
+        ipaddr = ipaddr << 4;
+        ipaddr = ipaddr + iparray[i];
+    }
+
+    return ipaddr;
+}
+
+static boolean checkIsProxyPacket(char *packet)
+{
+    return strstr(packet, "PROXY") != NULL;
+}
+
+static uint32_t getIPfromProxyPacket(char *packet)
+{
+    uint32_t src_ip = 0;
+    //IPaddress src_ip;
+
+    char ip_string[16];
+
+    memset(ip_string, 0, 16);
+
+    //get ip out of buffer
+    sscanf(packet, "%*s %*s %s", ip_string);
+
+    //convert to uint_3
+    src_ip = ipStringToAddr(ip_string);
+
+    return src_ip;
 }
 
 // Finds an address by searching the table.  If the address is not found,
@@ -149,7 +188,7 @@ static net_addr_t *NET_SDL_FindAddress(IPaddress *addr)
     }
 
     // Add a new entry
-    
+
     new_entry = Z_Malloc(sizeof(addrpair_t), PU_STATIC, 0);
 
     new_entry->sdl_addr = *addr;
@@ -165,7 +204,7 @@ static net_addr_t *NET_SDL_FindAddress(IPaddress *addr)
 static void NET_SDL_FreeAddress(net_addr_t *addr)
 {
     int i;
-    
+
     for (i=0; i<addr_table_size; ++i)
     {
         if (addr == &addr_table[i]->net_addr)
@@ -193,14 +232,14 @@ net_addr_t *NET_SDL_ResolveAddress(const char *address)
     addr_hostname = M_StringDuplicate(address);
     if (colon != NULL)
     {
-	addr_hostname[colon - address] = '\0';
-	addr_port = atoi(colon + 1);
+        addr_hostname[colon - address] = '\0';
+        addr_port = atoi(colon + 1);
     }
     else
     {
-	addr_port = port;
+        addr_port = port;
     }
-    
+
     result = SDLNet_ResolveHost(&ip, addr_hostname, addr_port);
 
     free(addr_hostname);
@@ -261,10 +300,10 @@ static boolean NET_SDL_InitClient(void)
     // @category net
     // @arg <n>
     //
-    // Use the specified UDP port for communications, instead of 
+    // Use the specified UDP port for communications, instead of
     // the default (2342).
     //
-    
+
     p = M_CheckParmWithArgs("-port", 1);
     if (p > 0)
         port = atoi(myargv[p+1]);
@@ -293,7 +332,7 @@ static boolean NET_SDL_InitClient(void)
     {
         I_Error("NET_SDL_InitClient: Unable to open a socket host: %x!", ip.host);
     }
-    
+
     //recvpacket = SDLNet_AllocPacket(1500);
 
 #ifdef DROP_PACKETS
@@ -318,7 +357,7 @@ static boolean NET_SDL_InitClient(void)
     // @category net
     // @arg <n>
     //
-    // Use the specified UDP port for communications, instead of 
+    // Use the specified UDP port for communications, instead of
     // the default (2342).
     //
 
@@ -334,7 +373,7 @@ static boolean NET_SDL_InitClient(void)
     {
         I_Error("NET_SDL_InitClient: Unable to open a socket!");
     }
-    
+
     recvpacket = SDLNet_AllocPacket(1500);
 
 #ifdef DROP_PACKETS
@@ -389,6 +428,7 @@ static boolean NET_SDL_InitServer(void)
 
     for(int i = 0; i < MAX_SOCKETS; i++) {
         serverconnections[i] = NULL;
+        actual_ip_list[i] = 0;
     }
 
     initted = true;
@@ -429,7 +469,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
 #ifdef IS_TCP
     uint32_t length;
     IPaddress *remote;
-    IPaddress ip;
+    int found = 0;
 
     if (serversocketSet == NULL) { // is client
         int bytes_sent;
@@ -441,7 +481,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
         if (bytes_sent < sizeof(length)) {
             I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
                     SDLNet_GetError());
-        }        
+        }
 
         bytes_sent = SDLNet_TCP_Send(tcpsocket, packet->data, packet->len);
         if (bytes_sent < packet->len) {
@@ -452,7 +492,6 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
         //
         // Server
         //
-        int found = 0;
         for (int i = 0; i < MAX_SOCKETS; i++) {
             TCPsocket conn = serverconnections[i];
             if(conn != NULL) {
@@ -471,7 +510,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
                         SDLNet_TCP_Close(conn);
                         serverconnections[i] = NULL;
                         break;
-                    }     
+                    }
 
                     bytes_sent = SDLNet_TCP_Send(conn, packet->data, packet->len);
                     if (bytes_sent < packet->len) {
@@ -494,7 +533,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
 #else
     UDPpacket sdl_packet;
     IPaddress ip;
-   
+
     if (addr == &net_broadcast_addr)
     {
         SDLNet_ResolveHost(&ip, NULL, port);
@@ -548,18 +587,25 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
     int num_active;
     // net_addr_t *peer_ip;
     IPaddress *remote;
+    uint32_t actual_ip;
+
     int added = 0;
+    int proxyadded = 0;
+
     uint32_t length_expected;
     int numServerActiveConnections;
     char *data;
-    
+    char proxy_packet_buffer[HAPROXY_MAX_BUF];
+    unsigned char recv_c = '\0';
+    char packet_index = 0;
+
     //printf("receiving packet\n");
 
     if (serversocketSet == NULL) {
 
         //
         // client
-        // 
+        //
 
         //printf("client has connections\n");
         // if (SDLNet_SocketReady(tcpsocket) == 0) {
@@ -605,7 +651,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         memcpy((*packet)->data, data, length_expected);
         (*packet)->len = length_recv;
         free(data);
-        
+
         // printf("received %d bytes\n", length_recv);
 
         // checkme
@@ -614,8 +660,8 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
 #if 0
         memset( peer_host_name_buffer, 0, 80 );
-        NET_SDL_AddrToString(peer_ip, peer_host_name_buffer, 80);        
-        //printf("peer_hostname %s\n", peer_host_name_buffer); 
+        NET_SDL_AddrToString(peer_ip, peer_host_name_buffer, 80);
+        //printf("peer_hostname %s\n", peer_host_name_buffer);
         for(int i = 0; i < 80; i++) {
             char c = peer_host_name_buffer[i];
             if(c == ':') {
@@ -626,11 +672,11 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         }
 
 
-        //peer_ip_string = strtok(&peer_host_name_buffer, ':');   
+        //peer_ip_string = strtok(&peer_host_name_buffer, ':');
         //printf("peer_ip_string%s\n", peer_host_name_buffer);
 
         *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
-        //if(*addr != NULL) 
+        //if(*addr != NULL)
         //    printf("recv packet from %s\n", NET_AddrToString(*addr));
 #endif
 
@@ -640,7 +686,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
         //
         // server
-        // 
+        //
 
         while (1) {
 
@@ -653,25 +699,56 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 break;
             }
 
-            //check if already present
-            remote = SDLNet_TCP_GetPeerAddress(newConnection);
-            printf("");
-            for (int i = 0; i < MAX_SOCKETS; i++) {
-                if(serverconnections[i] != NULL) {
-                    if(HostAddressEqual(remote, SDLNet_TCP_GetPeerAddress(serverconnections[i]))) {
-                        //printf("already have old conn in %d, rejecting\n", i);
+            //printf("adding new connection\n");
+            added = 0;
+            proxyadded = 0;
+
+            //check if already added
+
+            memset( proxy_packet_buffer, 0, HAPROXY_MAX_BUF );
+            packet_index = 0;
+
+            while(1) {
+                length_recv = SDLNet_TCP_Recv(newConnection, &recv_c, 1);
+
+                if (length_recv <= 0) {
+                    SDLNet_TCP_Close(newConnection);
+                    return false; // Close everything
+                }
+
+                if(recv_c == '\n') {
+                    proxy_packet_buffer[packet_index] = '\0';
+                    break;
+                }
+                proxy_packet_buffer[packet_index] = recv_c;
+                packet_index = packet_index+1;
+                if(packet_index >= HAPROXY_MAX_BUF) {
+                    printf("max proxy packet size reached without a CRLF\n");
+                    SDLNet_TCP_Close(newConnection);
+                    break;
+                }
+
+            }
+
+
+            if(checkIsProxyPacket(proxy_packet_buffer)) {
+                actual_ip = getIPfromProxyPacket(proxy_packet_buffer);
+                for (int i = 0; i < MAX_SOCKETS; i++) {
+                    if(actual_ip_list[i] == actual_ip) {
+                        printf("rejecting duplicate connection %x at %d\n", actual_ip, i);
                         SDLNet_TCP_Close(newConnection);
                         return false;
                     }
                 }
+                proxyadded = 1;
             }
 
-            //printf("adding new connection\n");
-            added = 0;
             for (int i = 0; i < MAX_SOCKETS; i++) {
                 if(serverconnections[i] == NULL) {
-                    // printf("adding newconn to %d\n", i);
+                    printf("adding newconn to %d\n", i);
                     serverconnections[i] = newConnection;
+                    if(proxyadded == 1)
+                        actual_ip_list[i] = actual_ip;
                     SDLNet_TCP_AddSocket(serversocketSet, newConnection);
                     added = 1;
                     break;
@@ -720,6 +797,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
+                actual_ip_list[i] = 0;
                 continue; // Check other sockets
             }
 
@@ -737,6 +815,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
+                actual_ip_list[i] = 0;
                 // NET_FreePacket(*packet);
                 free(data);
                 continue; // Check other sockets
@@ -822,4 +901,3 @@ net_module_t net_sdl_module =
     NET_SDL_FreeAddress,
     NET_SDL_ResolveAddress,
 };
-
