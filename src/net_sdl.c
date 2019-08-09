@@ -239,7 +239,6 @@ void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len)
     }
 }
 
-
 static boolean NET_SDL_InitClient(void)
 {
 #ifdef IS_TCP
@@ -268,7 +267,6 @@ static boolean NET_SDL_InitClient(void)
     if (port == 0) {
         port = DEFAULT_PORT;
     }
-
 
     p = M_CheckParmWithArgs("-connect", 1);
     if (p > 0)
@@ -357,7 +355,9 @@ static boolean NET_SDL_InitServer(void)
     if (p > 0)
         port = atoi(myargv[p+1]);
 
-    port = DEFAULT_PORT;
+    if (port == 0) {
+        port = DEFAULT_PORT;
+    }
 
     SDLNet_Init();
 
