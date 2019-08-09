@@ -459,14 +459,24 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
                     uint32_t length = packet->len;
                     bytes_sent = SDLNet_TCP_Send(conn, &length, sizeof(length));
                     if (bytes_sent < sizeof(length)) {
-                        I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
-                                SDLNet_GetError());
+                        // I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
+                        //         SDLNet_GetError());
+                        printf("failed to send to client!\n");
+                        SDLNet_TCP_DelSocket(serversocketSet, conn);
+                        SDLNet_TCP_Close(conn);
+                        serverconnections[i] = NULL;
+                        break;
                     }     
 
                     bytes_sent = SDLNet_TCP_Send(conn, packet->data, packet->len);
                     if (bytes_sent < packet->len) {
-                        I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
-                                SDLNet_GetError());
+                        // I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
+                        //         SDLNet_GetError());
+                        printf("failed to send to client!\n");
+                        SDLNet_TCP_DelSocket(serversocketSet, conn);
+                        SDLNet_TCP_Close(conn);
+                        serverconnections[i] = NULL;
+                        break;
                     }
 
                     found = 1;
@@ -474,7 +484,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
                 }
             }
         }
-        assert(found);
+        // assert(found);
     }
 #else
     UDPpacket sdl_packet;
