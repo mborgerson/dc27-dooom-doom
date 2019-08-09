@@ -20,6 +20,7 @@
 
 #include "z_zone.h"
 #include "p_local.h"
+#include "../net_server.h"
 
 #include "doomstat.h"
 
@@ -146,9 +147,8 @@ void P_Ticker (void)
 	    P_PlayerThink (&players[i]);
 
         #if SERVER == 1
-            extern char *sv_player_names[MAXPLAYERS];
             if (players[i].mo->subsector->sector->tag == OOO_SECTOR_TAG) {
-                printf("SCORING %s %d %d\n", sv_player_names[i], players[i].mo->x, player->mo->y);
+                printf("SCORING %s %d %d\n", sv_player_names[i], players[i].mo->x, players[i].mo->y);
             }
         #endif /* SERVER */
 

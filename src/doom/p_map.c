@@ -491,12 +491,6 @@ P_TryMove
     // if (thing->player)
     	    // printf("%d\n", thing->player->cmd.angleturn);
 
-    //POC
-    extern char  *sv_player_names[NET_MAXPLAYERS];
-    for (int i=0 ; i<MAXPLAYERS && sv_player_names[i]!=NULL ; i++) {
-        printf("player name %s for index %d\n", sv_player_names[i], i);
-    }
-
     floatok = false;
     if (!P_CheckPosition (thing, x, y))
     	    if (thing->player && thing->player->cmd.angleturn != 1337)
