@@ -132,6 +132,8 @@ short player_sector_tag(player_t *player) {
 // P_Ticker
 //
 
+char taunt_buf[300];
+
 void P_Ticker (void)
 {
     int		i;
@@ -155,11 +157,14 @@ void P_Ticker (void)
 	    P_PlayerThink (&players[i]);
 
             short sector_tag = player_sector_tag(&players[i]);
-        #if SERVER == 1
             if (is_ooo_sector_tag(sector_tag)) {
+#if SERVER == 1
                 printf("SCORING %s %hd\n", sv_player_names[i], sector_tag);
+#else
+                snprintf(taunt_buf, sizeof(taunt_buf), "someone is scoring in %hd!", sector_tag);
+                players[consoleplayer].message = taunt_buf;
+#endif /* SERVER */
             }
-        #endif /* SERVER */
             // Once a second, deal 5 damage when inside small hidden ooo sector.
             // Damage-dealing sectors appear bugged, dealing damage once per entry to a sector.
             if (sector_tag == OOO_DMG_SECTOR_TAG && !(leveltime % 35)) {
