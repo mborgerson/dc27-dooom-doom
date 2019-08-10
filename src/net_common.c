@@ -32,7 +32,7 @@
 
 // connections time out after 30 seconds
 
-#define CONNECTION_TIMEOUT_LEN 30
+#define CONNECTION_TIMEOUT_LEN 10
 
 // maximum time between sending packets
 
