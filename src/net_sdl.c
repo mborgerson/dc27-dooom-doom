@@ -46,11 +46,14 @@
 #define MAX_SOCKETS 32
 #define MAX_PACKET_SIZE 1500
 #define HAPROXY_MAX_BUF 108
+<<<<<<< HEAD
+=======
 
 
 #define ENFORCE_PROXY 1
 #define SIMULATE_PROXY_CONNECTION 0
 #define ALLOW_REENTRY 0
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
 
 static boolean initted = false;
 static int port = DEFAULT_PORT;
@@ -96,10 +99,11 @@ static boolean AddressesEqual(IPaddress *a, IPaddress *b)
         && a->port == b->port;
 }
 
-uint32_t ipStringToAddr(char* ip_string)
+uint32_t ipStringToID(char* ip_string)
 {
     char packet[strlen(ip_string)];
-    uint32_t ipaddr = 0;
+    //uint32_t ipaddr = 0;
+
     uint32_t iparray[4];
 
     memset(packet, 0, strlen(ip_string));
@@ -107,12 +111,11 @@ uint32_t ipStringToAddr(char* ip_string)
 
     sscanf(packet, "%d.%d.%d.%d", &iparray[0],&iparray[1],&iparray[2],&iparray[3]);
 
-    for(int i = 0; i < 4; i++) {
+    /*for(int i = 0; i < 4; i++) {
         ipaddr = ipaddr << 8;
         ipaddr = ipaddr + iparray[i];
-    }
+    }*/
 
-    return ipaddr;
 }
 
 static boolean checkIsProxyPacket(char *packet)
@@ -133,7 +136,7 @@ static uint32_t getIPfromProxyPacket(char *packet)
     sscanf(packet, "%*s %*s %s", ip_string);
 
     //convert to uint_3
-    src_ip = ipStringToAddr(ip_string);
+    src_ip = ipStringToID(ip_string);
 
     return src_ip;
 }
@@ -344,6 +347,8 @@ static boolean NET_SDL_InitClient(void)
         I_Error("NET_SDL_InitClient: Unable to open a socket host: %x!", ip.host);
     }
 
+<<<<<<< HEAD
+=======
 #if SIMULATE_PROXY_CONNECTION
     char proxy_packet_buffer[HAPROXY_MAX_BUF];
     // Send dummy proxy string with current IP addr
@@ -369,6 +374,7 @@ static boolean NET_SDL_InitClient(void)
 
 #endif
 
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
     //recvpacket = SDLNet_AllocPacket(1500);
 
 #ifdef DROP_PACKETS
@@ -628,15 +634,27 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
     int num_active;
     IPaddress *remote;
     uint32_t actual_ip;
+<<<<<<< HEAD
+
+=======
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
     int added = 0;
+    int proxyadded = 0;
+
     uint32_t length_expected;
     int numServerActiveConnections;
     char *data;
+<<<<<<< HEAD
+    char proxy_packet_buffer[HAPROXY_MAX_BUF];
+    unsigned char recv_c = '\0';
+    char packet_index = 0;
+=======
     uint8_t proxy_packet_buffer[HAPROXY_MAX_BUF];
     uint8_t recv_c = '\0';
     size_t packet_index = 0;
     TCPsocket newConnection;
     int should_close;
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
 
     //printf("receiving packet\n");
 
@@ -645,6 +663,15 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         //
         // client
         //
+<<<<<<< HEAD
+
+        //printf("client has connections\n");
+        // if (SDLNet_SocketReady(tcpsocket) == 0) {
+        //     printf("socket not ready\n");
+        //     return false;
+        // }
+=======
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
 
         num_active = SDLNet_CheckSockets(clientsocketSet, 0);
         if (num_active < 1) {
@@ -696,6 +723,31 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         *addr = NET_SDL_FindAddress(SDLNet_TCP_GetPeerAddress(tcpsocket));
         assert(*addr != NULL);
 
+<<<<<<< HEAD
+#if 0
+        memset( peer_host_name_buffer, 0, 80 );
+        NET_SDL_AddrToString(peer_ip, peer_host_name_buffer, 80);
+        //printf("peer_hostname %s\n", peer_host_name_buffer);
+        for(int i = 0; i < 80; i++) {
+            char c = peer_host_name_buffer[i];
+            if(c == ':') {
+                //printf("found value, splitting\n");
+                peer_host_name_buffer[i] = '\0';
+                break;
+            }
+        }
+
+
+        //peer_ip_string = strtok(&peer_host_name_buffer, ':');
+        //printf("peer_ip_string%s\n", peer_host_name_buffer);
+
+        *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
+        //if(*addr != NULL)
+        //    printf("recv packet from %s\n", NET_AddrToString(*addr));
+#endif
+
+=======
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
         return true;
 
     } else {
@@ -721,6 +773,21 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
             //printf("adding new connection\n");
             added = 0;
+<<<<<<< HEAD
+            proxyadded = 0;
+
+            //check if already added
+
+            memset( proxy_packet_buffer, 0, HAPROXY_MAX_BUF );
+            packet_index = 0;
+
+            while(1) {
+                length_recv = SDLNet_TCP_Recv(newConnection, &recv_c, 1);
+
+                if (length_recv <= 0) {
+                    SDLNet_TCP_Close(newConnection);
+                    return false; // Close everything
+=======
             memset(proxy_packet_buffer, 0, HAPROXY_MAX_BUF);
             packet_index = 0;
             should_close = 0;
@@ -732,17 +799,48 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 if (length_recv <= 0) {
                     should_close = 1;
                     break;
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
                 }
 
                 if(recv_c == '\n') {
                     proxy_packet_buffer[packet_index] = '\0';
                     break;
                 }
+<<<<<<< HEAD
+=======
 
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
                 proxy_packet_buffer[packet_index] = recv_c;
                 packet_index = packet_index+1;
                 if(packet_index >= HAPROXY_MAX_BUF) {
                     printf("max proxy packet size reached without a CRLF\n");
+<<<<<<< HEAD
+                    SDLNet_TCP_Close(newConnection);
+                    break;
+                }
+
+            }
+
+
+            if(checkIsProxyPacket(proxy_packet_buffer)) {
+                actual_ip = getIPfromProxyPacket(proxy_packet_buffer);
+                for (int i = 0; i < MAX_SOCKETS; i++) {
+                    if(actual_ip_list[i] == actual_ip) {
+                        printf("rejecting duplicate connection %x at %d\n", actual_ip, i);
+                        SDLNet_TCP_Close(newConnection);
+                        return false;
+                    }
+                }
+                proxyadded = 1;
+            }
+
+            for (int i = 0; i < MAX_SOCKETS; i++) {
+                if(serverconnections[i] == NULL) {
+                    printf("adding newconn to %d\n", i);
+                    serverconnections[i] = newConnection;
+                    if(proxyadded == 1)
+                        actual_ip_list[i] = actual_ip;
+=======
                     should_close = 1;
                     break;
                 }
@@ -773,6 +871,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                     printf("adding newconn to %d\n", i);
                     serverconnections[i] = newConnection;
                     actual_ip_list[i] = actual_ip;
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
                     SDLNet_TCP_AddSocket(serversocketSet, newConnection);
                     added = 1;
                     break;
@@ -812,9 +911,13 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
+<<<<<<< HEAD
+                actual_ip_list[i] = 0;
+=======
 #if ALLOW_REENTRY
                 actual_ip_list[i] = 0;
 #endif                
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
                 continue; // Check other sockets
             }
 
@@ -832,9 +935,13 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
+<<<<<<< HEAD
+                actual_ip_list[i] = 0;
+=======
 #if ALLOW_REENTRY
                 actual_ip_list[i] = 0;
 #endif
+>>>>>>> aa5c9a79a08fe7ddabcb5cfc6ea36ed2062d7eb7
                 // NET_FreePacket(*packet);
                 free(data);
                 continue; // Check other sockets
