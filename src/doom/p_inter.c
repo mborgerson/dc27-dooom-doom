@@ -703,6 +703,7 @@ P_KillMobj
 			
 	target->flags &= ~MF_SOLID;
 	target->player->playerstate = PST_DEAD;
+	target->player->timeofdeath = time(NULL);
 	P_DropWeapon (target->player);
 
 	if (target->player == &players[consoleplayer]

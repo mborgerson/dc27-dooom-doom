@@ -38,6 +38,7 @@
 #include "d_ticcmd.h"
 
 #include "net_defs.h"
+#include <time.h>
 
 
 
@@ -80,6 +81,7 @@ typedef struct player_s
     mobj_t*		mo;
     playerstate_t	playerstate;
     ticcmd_t		cmd;
+    time_t      timeofdeath;
 
     // Determine POV,
     //  including viewpoint bobbing during movement.

@@ -32,8 +32,7 @@
 
 // Index of the special effects (INVUL inverse) map.
 #define INVERSECOLORMAP		32
-
-#define OOO_SECTOR_TAG 777
+#define RESPAWN_DELAY 15
 
 //
 // Movement.
@@ -218,8 +217,20 @@ void P_DeathThink (player_t* player)
 	player->damagecount--;
 	
 
-    if (player->cmd.buttons & BT_USE)
-	player->playerstate = PST_REBORN;
+    if (player->cmd.buttons & BT_USE) {
+    	time_t timepast = time(NULL) - player->timeofdeath;
+    	if(timepast > RESPAWN_DELAY) {
+			player->playerstate = PST_REBORN;
+
+    	}
+    	else {
+    		time_t timeleft = RESPAWN_DELAY - timepast;
+    		char timemsg[50];
+    		sprintf(timemsg, "Time Left Before Respawn %d", timeleft);
+	    	player->message = DEH_String("Time Left Before Respawn");
+    		printf("%s\n", timemsg);
+    	}
+	}
 }
 
 
