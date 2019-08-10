@@ -50,6 +50,7 @@
 
 #define ENFORCE_PROXY 1
 #define SIMULATE_PROXY_CONNECTION 0
+#define ALLOW_REENTRY 0
 
 static boolean initted = false;
 static int port = DEFAULT_PORT;
@@ -544,7 +545,9 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
                         SDLNet_TCP_DelSocket(serversocketSet, conn);
                         SDLNet_TCP_Close(conn);
                         serverconnections[i] = NULL;
+#if ALLOW_REENTRY
                         actual_ip_list[i] = 0;
+#endif
                         break;
                     }
 
@@ -556,7 +559,9 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
                         SDLNet_TCP_DelSocket(serversocketSet, conn);
                         SDLNet_TCP_Close(conn);
                         serverconnections[i] = NULL;
+#if ALLOW_REENTRY
                         actual_ip_list[i] = 0;
+#endif
                         break;
                     }
 
@@ -807,7 +812,9 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
+#if ALLOW_REENTRY
                 actual_ip_list[i] = 0;
+#endif                
                 continue; // Check other sockets
             }
 
@@ -825,7 +832,9 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
+#if ALLOW_REENTRY
                 actual_ip_list[i] = 0;
+#endif
                 // NET_FreePacket(*packet);
                 free(data);
                 continue; // Check other sockets
