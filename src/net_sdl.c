@@ -577,6 +577,11 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             // FIXME: add reconnect if socket is broken
         }
 
+        if (length_expected > MAX_PACKET_SIZE) {
+            I_Error("NET_SDL_RecvPacket: Error receiving packet 2: %s",
+                    SDLNet_GetError());
+        }
+
         // *packet = NET_NewPacket(length_recv); //result == size of msg received
         // assert(*packet != NULL);
 
@@ -588,9 +593,8 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
         length_recv = SDLNet_TCP_Recv(tcpsocket, data, length_expected);
         if (length_recv != length_expected) {
-            I_Error("NET_SDL_RecvPacket: Error receiving packet 2: %s",
+            I_Error("NET_SDL_RecvPacket: Error receiving packet 3: %s",
                     SDLNet_GetError());
-            // NET_FreePacket(*packet);
             free(data);
         }
 
@@ -607,28 +611,6 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         // checkme
         *addr = NET_SDL_FindAddress(SDLNet_TCP_GetPeerAddress(tcpsocket));
         assert(*addr != NULL);
-
-#if 0
-        memset( peer_host_name_buffer, 0, 80 );
-        NET_SDL_AddrToString(peer_ip, peer_host_name_buffer, 80);        
-        //printf("peer_hostname %s\n", peer_host_name_buffer); 
-        for(int i = 0; i < 80; i++) {
-            char c = peer_host_name_buffer[i];
-            if(c == ':') {
-                //printf("found value, splitting\n");
-                peer_host_name_buffer[i] = '\0';
-                break;
-            }
-        }
-
-
-        //peer_ip_string = strtok(&peer_host_name_buffer, ':');   
-        //printf("peer_ip_string%s\n", peer_host_name_buffer);
-
-        *addr = NET_SDL_ResolveAddress(peer_host_name_buffer);
-        //if(*addr != NULL) 
-        //    printf("recv packet from %s\n", NET_AddrToString(*addr));
-#endif
 
         return true;
 
@@ -685,18 +667,9 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
                 continue;
             }
 
-            char length_expected_buf[256+1];
-            uint32_t *length_expected_ptr = (uint32_t *)length_expected_buf;
-            length_expected_buf[256] = '\xCC';
-
-            length_expected = 0;
-            assert(sizeof(length_expected) == 4);
-            length_recv = SDLNet_TCP_Recv(conn, length_expected_ptr, 4);
-            // printf("received %d byte length field!\n", length_recv);
-            assert(length_expected_buf[256] == '\xCC');
-            length_expected = *length_expected_ptr;
-
-            if (length_recv < sizeof(length_expected)) {
+            length_recv = SDLNet_TCP_Recv(conn, &length_expected, 4);
+            if ((length_recv < sizeof(length_expected))
+                || (length_expected > MAX_PACKET_SIZE)) {
                 // I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                 //         SDLNet_GetError());
                 // printf("failed to recv, closing socket\n");
@@ -732,25 +705,6 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             memcpy((*packet)->data, data, length_expected);
             (*packet)->len = length_recv;
             free(data);
-
-#if 0
-            *packet = NET_NewPacket(length_recv); //result == size of msg received
-            assert(*packet != NULL);
-
-            printf("receiving %d bytes\n", length_expected);
-            length_recv = SDLNet_TCP_Recv(conn, (*packet)->data, length_expected);
-            if (length_recv != length_expected) {
-                // I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
-                //         SDLNet_GetError());
-                printf("failed to recv, closing socket\n");
-                SDLNet_TCP_DelSocket(serversocketSet, conn);
-                SDLNet_TCP_Close(conn);
-                serverconnections[i] = NULL;
-                NET_FreePacket(*packet);
-                continue; // Check other sockets
-            }
-            (*packet)->len = length_recv;
-#endif
 
             // printf("received %d bytes\n", length_recv);
 
