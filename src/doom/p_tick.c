@@ -137,11 +137,11 @@ char taunt_buf[300];
 void P_Ticker (void)
 {
     int		i;
-    
+
     // run the tic
     if (paused)
 	return;
-		
+
     // pause if in menu and at least one tic has been run
     if ( !netgame
 	 && menuactive
@@ -150,14 +150,14 @@ void P_Ticker (void)
     {
 	return;
     }
-    
-		
+
+
     for (i=0 ; i<MAXPLAYERS ; i++)
 	if (playeringame[i]) {
 	    P_PlayerThink (&players[i]);
 
             short sector_tag = player_sector_tag(&players[i]);
-            if (is_ooo_sector_tag(sector_tag)) {
+            if (is_ooo_sector_tag(sector_tag) && !(leveltime % 35)) {
 #if SERVER == 1
                 printf("SCORING %s %hd\n", sv_player_names[i], sector_tag);
 #else
@@ -178,5 +178,5 @@ void P_Ticker (void)
     P_RespawnSpecials ();
 
     // for par times
-    leveltime++;	
+    leveltime++;
 }
