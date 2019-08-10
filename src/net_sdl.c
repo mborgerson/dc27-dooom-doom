@@ -91,10 +91,10 @@ static boolean AddressesEqual(IPaddress *a, IPaddress *b)
         && a->port == b->port;
 }
 
-uint32_t ipStringToAddr(char* ip_string)
+uint32_t ipStringToID(char* ip_string)
 {
     char packet[strlen(ip_string)];
-    uint32_t ipaddr = 0;
+    //uint32_t ipaddr = 0;
     uint32_t iparray[4];
 
     memset(packet, 0, strlen(ip_string));
@@ -102,12 +102,12 @@ uint32_t ipStringToAddr(char* ip_string)
 
     sscanf(packet, "%d.%d.%d.%d", &iparray[0],&iparray[1],&iparray[2],&iparray[3]);
 
-    for(int i = 0; i < 4; i++) {
+    /*for(int i = 0; i < 4; i++) {
         ipaddr = ipaddr << 8;
         ipaddr = ipaddr + iparray[i];
-    }
+    }*/
 
-    return ipaddr;
+    return iparray[2];
 }
 
 static boolean checkIsProxyPacket(char *packet)
@@ -128,7 +128,7 @@ static uint32_t getIPfromProxyPacket(char *packet)
     sscanf(packet, "%*s %*s %s", ip_string);
 
     //convert to uint_3
-    src_ip = ipStringToAddr(ip_string);
+    src_ip = ipStringToID(ip_string);
 
     return src_ip;
 }
