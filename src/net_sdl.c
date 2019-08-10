@@ -108,7 +108,7 @@ uint32_t ipStringToAddr(char* ip_string)
     sscanf(packet, "%d.%d.%d.%d", &iparray[0],&iparray[1],&iparray[2],&iparray[3]);
 
     for(int i = 0; i < 4; i++) {
-        ipaddr = ipaddr << 4;
+        ipaddr = ipaddr << 8;
         ipaddr = ipaddr + iparray[i];
     }
 
