@@ -315,12 +315,14 @@ static int GetButtonsState(void)
         }
     }
 
+#if 0
 #ifdef XBOX
 // Exit hack
     if (SDL_JoystickGetButton(joystick, 6)) {
         HalReturnToFirmware(HalRebootRoutine);
         while (1);
     }
+#endif
 #endif
 
     return result;

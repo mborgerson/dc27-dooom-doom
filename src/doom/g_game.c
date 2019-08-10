@@ -314,6 +314,9 @@ static int G_NextWeapon(int direction)
     return weapon_order_table[i].weapon_num;
 }
 
+
+int ooo_prevent_shooting = 1;
+
 //
 // G_BuildTiccmd
 // Builds a ticcmd from all of the available inputs
@@ -431,8 +434,13 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     cmd->chatchar = HU_dequeueChatChar();
 
     if (gamekeydown[key_fire] || mousebuttons[mousebfire]
-	|| joybuttons[joybfire])
-	cmd->buttons |= BT_ATTACK;
+	|| joybuttons[joybfire]) {
+	if (ooo_prevent_shooting) {
+                players[consoleplayer].message = "ooo does not condone violence by noobs";
+        } else {
+           cmd->buttons |= BT_ATTACK;
+        }
+    }
 
     if (gamekeydown[key_use]
      || joybuttons[joybuse]
