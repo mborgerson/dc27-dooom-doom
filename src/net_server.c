@@ -1796,7 +1796,7 @@ static void NET_SV_RunClient(net_client_t *client)
             NET_SV_BroadcastMessage("Game startup aborted because "
                                     "player '%s' disconnected.",
                                     client->name);
-            NET_SV_GameEnded();
+            // NET_SV_GameEnded();
         }
 
         free(client->name);
