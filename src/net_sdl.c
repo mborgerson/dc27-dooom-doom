@@ -47,6 +47,10 @@
 #define MAX_PACKET_SIZE 1500
 #define HAPROXY_MAX_BUF 108
 
+
+#define ENFORCE_PROXY 1
+#define SIMULATE_PROXY_CONNECTION 0
+
 static boolean initted = false;
 static int port = DEFAULT_PORT;
 
@@ -283,6 +287,11 @@ void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len)
     }
 }
 
+#if XBOX
+extern char xbox_ip_str[16];
+extern char central_server_ip_str[16];
+#endif
+
 static boolean NET_SDL_InitClient(void)
 {
 #ifdef IS_TCP
@@ -290,6 +299,7 @@ static boolean NET_SDL_InitClient(void)
     int port = 0;
     IPaddress ip;
     int status;
+    int bytes_sent;
 
     const char* host = "127.0.0.1";
 
@@ -332,6 +342,31 @@ static boolean NET_SDL_InitClient(void)
     {
         I_Error("NET_SDL_InitClient: Unable to open a socket host: %x!", ip.host);
     }
+
+#if SIMULATE_PROXY_CONNECTION
+    char proxy_packet_buffer[HAPROXY_MAX_BUF];
+    // Send dummy proxy string with current IP addr
+    snprintf(proxy_packet_buffer, sizeof(proxy_packet_buffer), "PROXY TCP4 %s %s %d %d\r\n",
+
+#ifdef XBOX
+
+        xbox_ip_str,
+        central_server_ip_str,
+#else
+        "127.0.0.1",
+        "127.0.0.1",
+#endif
+        2342,
+        2342
+        );
+
+    bytes_sent = SDLNet_TCP_Send(tcpsocket, proxy_packet_buffer, strlen(proxy_packet_buffer));
+    if (bytes_sent < strlen(proxy_packet_buffer)) {
+        I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
+                SDLNet_GetError());
+    }
+
+#endif
 
     //recvpacket = SDLNet_AllocPacket(1500);
 
@@ -509,6 +544,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
                         SDLNet_TCP_DelSocket(serversocketSet, conn);
                         SDLNet_TCP_Close(conn);
                         serverconnections[i] = NULL;
+                        actual_ip_list[i] = 0;
                         break;
                     }
 
@@ -520,6 +556,7 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
                         SDLNet_TCP_DelSocket(serversocketSet, conn);
                         SDLNet_TCP_Close(conn);
                         serverconnections[i] = NULL;
+                        actual_ip_list[i] = 0;
                         break;
                     }
 
@@ -583,21 +620,18 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 {
 #ifdef IS_TCP
     int length_recv = -1;
-    // char peer_host_name_buffer[80];
     int num_active;
-    // net_addr_t *peer_ip;
     IPaddress *remote;
     uint32_t actual_ip;
-
     int added = 0;
-    int proxyadded = 0;
-
     uint32_t length_expected;
     int numServerActiveConnections;
     char *data;
-    char proxy_packet_buffer[HAPROXY_MAX_BUF];
-    unsigned char recv_c = '\0';
-    char packet_index = 0;
+    uint8_t proxy_packet_buffer[HAPROXY_MAX_BUF];
+    uint8_t recv_c = '\0';
+    size_t packet_index = 0;
+    TCPsocket newConnection;
+    int should_close;
 
     //printf("receiving packet\n");
 
@@ -606,12 +640,6 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         //
         // client
         //
-
-        //printf("client has connections\n");
-        // if (SDLNet_SocketReady(tcpsocket) == 0) {
-        //     printf("socket not ready\n");
-        //     return false;
-        // }
 
         num_active = SDLNet_CheckSockets(clientsocketSet, 0);
         if (num_active < 1) {
@@ -672,73 +700,81 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         //
 
         while (1) {
-
+            //
+            // Check for new connections
+            //
             assert(tcpsocket != NULL);
 
-            // Check for new connections
-            TCPsocket newConnection = SDLNet_TCP_Accept(tcpsocket);
+            newConnection = SDLNet_TCP_Accept(tcpsocket);
             if (newConnection == NULL) {
                 // No pending connections
                 break;
             }
 
+            ///////////////////////////////////// HAPROXY TRACKING
+#if ENFORCE_PROXY
+
             //printf("adding new connection\n");
             added = 0;
-            proxyadded = 0;
-
-            //check if already added
-
-            memset( proxy_packet_buffer, 0, HAPROXY_MAX_BUF );
+            memset(proxy_packet_buffer, 0, HAPROXY_MAX_BUF);
             packet_index = 0;
+            should_close = 0;
+            actual_ip = 0;
 
-            while(1) {
+            // Read in the proxy line
+            while (1) {
                 length_recv = SDLNet_TCP_Recv(newConnection, &recv_c, 1);
-
                 if (length_recv <= 0) {
-                    SDLNet_TCP_Close(newConnection);
-                    return false; // Close everything
+                    should_close = 1;
+                    break;
                 }
 
                 if(recv_c == '\n') {
                     proxy_packet_buffer[packet_index] = '\0';
                     break;
                 }
+
                 proxy_packet_buffer[packet_index] = recv_c;
                 packet_index = packet_index+1;
                 if(packet_index >= HAPROXY_MAX_BUF) {
                     printf("max proxy packet size reached without a CRLF\n");
-                    SDLNet_TCP_Close(newConnection);
+                    should_close = 1;
                     break;
                 }
-
             }
 
+            if (should_close ||
+                !checkIsProxyPacket((char*)proxy_packet_buffer)) {
+                SDLNet_TCP_Close(newConnection);
+                printf("rejecting malformed request (no proxy line)\n");
+                continue; // Look for more connections
+            }
 
-            if(checkIsProxyPacket(proxy_packet_buffer)) {
-                actual_ip = getIPfromProxyPacket(proxy_packet_buffer);
-                for (int i = 0; i < MAX_SOCKETS; i++) {
-                    if(actual_ip_list[i] == actual_ip) {
-                        printf("rejecting duplicate connection %x at %d\n", actual_ip, i);
-                        SDLNet_TCP_Close(newConnection);
-                        return false;
-                    }
+            // Get the originating IP address from the proxy line
+            actual_ip = getIPfromProxyPacket((char*)proxy_packet_buffer);
+
+            // Check for an open sockets with this IP address already
+            for (int i = 0; i < MAX_SOCKETS; i++) {
+                if (actual_ip_list[i] == actual_ip) {
+                    printf("rejecting duplicate connection %x at %d\n", actual_ip, i);
+                    SDLNet_TCP_Close(newConnection);
+                    return false;
                 }
-                proxyadded = 1;
             }
+#endif
 
             for (int i = 0; i < MAX_SOCKETS; i++) {
-                if(serverconnections[i] == NULL) {
+                if (serverconnections[i] == NULL) {
                     printf("adding newconn to %d\n", i);
                     serverconnections[i] = newConnection;
-                    if(proxyadded == 1)
-                        actual_ip_list[i] = actual_ip;
+                    actual_ip_list[i] = actual_ip;
                     SDLNet_TCP_AddSocket(serversocketSet, newConnection);
                     added = 1;
                     break;
                 }
             }
 
-            if(!added) {
+            if (!added) {
                 // POTENTIAL DOS if one client takes up all available socket slots
                 // printf("no free space to add socket\n");
                 SDLNet_TCP_Close(newConnection);
@@ -755,10 +791,10 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
         // char data[MAX_PACKET_SIZE];
         // memset( data, 0, MAX_PACKET_SIZE );
 
-        for(int i = 0; i < MAX_SOCKETS; i++)
+        for (int i = 0; i < MAX_SOCKETS; i++)
         {
             TCPsocket conn = serverconnections[i];
-            if((conn == NULL) || (SDLNet_SocketReady(conn) == 0)) {
+            if ((conn == NULL) || (SDLNet_SocketReady(conn) == 0)) {
                 continue;
             }
 
@@ -785,7 +821,7 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
             if (length_recv < length_expected) {
                 // I_Error("NET_SDL_RecvPacket: Error receiving packet: %s",
                 //         SDLNet_GetError());
-                // printf("failed to recv, closing socket\n");
+                printf("failed to recv, closing socket\n");
                 SDLNet_TCP_DelSocket(serversocketSet, conn);
                 SDLNet_TCP_Close(conn);
                 serverconnections[i] = NULL;
@@ -805,7 +841,6 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
             // printf("received %d bytes\n", length_recv);
 
-            // check me
             remote = SDLNet_TCP_GetPeerAddress(conn);
             *addr = NET_SDL_FindAddress(remote);
             assert(*addr != NULL);
