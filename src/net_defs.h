@@ -28,13 +28,13 @@
 // NET_MAXPLAYERS, as there may be observers that are not participating
 // (eg. left/right monitors)
 
-#define MAXNETNODES 16
+#define MAXNETNODES 32
 
 // The maximum number of players, multiplayer/networking.
 // This is the maximum supported by the networking code; individual games
 // have their own values for MAXPLAYERS that can be smaller.
 
-#define NET_MAXPLAYERS 8
+#define NET_MAXPLAYERS 32
 
 // Maximum length of a player's name.
 
@@ -100,10 +100,10 @@ struct _net_addr_s
 };
 
 // Magic number sent when connecting to check this is a valid client
-#define NET_MAGIC_NUMBER     1454104972U
+#define NET_MAGIC_NUMBER     0x13371337U
 
 // Old magic number used by Chocolate Doom versions before v3.0:
-#define NET_OLD_MAGIC_NUMBER 3436803284U
+#define NET_OLD_MAGIC_NUMBER 1337133713U
 
 // header field value indicating that the packet is a reliable packet
 
@@ -223,8 +223,6 @@ typedef struct
 #define NET_TICDIFF_BUTTONS      (1 << 3)
 #define NET_TICDIFF_CONSISTANCY  (1 << 4)
 #define NET_TICDIFF_CHATCHAR     (1 << 5)
-#define NET_TICDIFF_RAVEN        (1 << 6)
-#define NET_TICDIFF_STRIFE       (1 << 7)
 
 typedef struct
 {

@@ -17,6 +17,10 @@
 
 #include "SDL.h"
 
+#ifndef XBOX
+#include <fcntl.h>
+#endif
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -226,6 +230,8 @@ static void ChooseFont(void)
 // Returns 1 if successful, 0 if an error occurred
 //
 
+#include <assert.h>
+
 int TXT_Init(void)
 {
     int flags = 0;
@@ -240,6 +246,11 @@ int TXT_Init(void)
     screen_image_w = TXT_SCREEN_W * font->w;
     screen_image_h = TXT_SCREEN_H * font->h;
 
+#ifdef XBOX
+    screen_image_w = 640;
+    screen_image_h = 480;
+#endif
+
     // If highdpi_font is selected, try to initialize high dpi rendering.
     if (font == &highdpi_font)
     {
@@ -249,12 +260,13 @@ int TXT_Init(void)
     TXT_SDLWindow =
         SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                          screen_image_w, screen_image_h, flags);
-
+    assert(TXT_SDLWindow != NULL);
     if (TXT_SDLWindow == NULL)
         return 0;
 
     renderer = SDL_CreateRenderer(TXT_SDLWindow, -1, 0);
 
+#ifndef XBOX
     // Special handling for OS X retina display. If we successfully set the
     // highdpi flag, check the output size for the screen renderer. If we get
     // the 2x doubled size we expect from a retina display, use the large font
@@ -273,6 +285,8 @@ int TXT_Init(void)
             // coordinates, not pixels.
         }
     }
+#endif
+    assert(renderer != NULL);
 
     // Failed to initialize for high dpi (retina display) rendering? If so
     // then use the normal resolution font instead.
@@ -599,6 +613,14 @@ static int MouseHasMoved(void)
 
 signed int TXT_GetChar(void)
 {
+#ifndef XBOX
+#ifdef SERVER
+#warning Switching to console input for server.
+	fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
+	return getchar();
+#endif
+#endif
+
     SDL_Event ev;
 
     while (SDL_PollEvent(&ev))

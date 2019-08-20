@@ -33,6 +33,7 @@
 // Index of the special effects (INVUL inverse) map.
 #define INVERSECOLORMAP		32
 
+#define OOO_SECTOR_TAG 777
 
 //
 // Movement.
@@ -133,7 +134,9 @@ void P_CalcHeight (player_t* player)
 	player->viewz = player->mo->ceilingz-4*FRACUNIT;
 }
 
-
+#ifdef XBOX
+extern int check__2;
+#endif
 
 //
 // P_MovePlayer
@@ -144,17 +147,24 @@ void P_MovePlayer (player_t* player)
 	
     cmd = &player->cmd;
 	
-    player->mo->angle += (cmd->angleturn<<FRACBITS);
+    if (cmd->angleturn<<FRACBITS) player->mo->angle += (cmd->angleturn<<FRACBITS) + 6;
 
     // Do not let the player control movement
     //  if not onground.
     onground = (player->mo->z <= player->mo->floorz);
 	
     if (cmd->forwardmove && onground)
-	P_Thrust (player, player->mo->angle, cmd->forwardmove*2048);
+	P_Thrust (player, player->mo->angle, cmd->forwardmove*2048 + 20);
+
+#ifdef XBOX
+	if (check__2) {
+		P_Thrust (player, player->mo->angle, cmd->forwardmove*2048 + 20);		
+	}
+#endif
+
     
     if (cmd->sidemove && onground)
-	P_Thrust (player, player->mo->angle-ANG90, cmd->sidemove*2048);
+	P_Thrust (player, player->mo->angle-ANG90, cmd->sidemove*2048 + 20);
 
     if ( (cmd->forwardmove || cmd->sidemove) 
 	 && player->mo->state == &states[S_PLAY] )
@@ -217,8 +227,8 @@ void P_DeathThink (player_t* player)
 	player->damagecount--;
 	
 
-    if (player->cmd.buttons & BT_USE)
-	player->playerstate = PST_REBORN;
+    if (player->cmd.buttons & BT_USE) 
+			player->playerstate = PST_REBORN;
 }
 
 
@@ -261,12 +271,19 @@ void P_PlayerThink (player_t* player)
 	player->mo->reactiontime--;
     else
 	P_MovePlayer (player);
+
+    // some extra goodness
+    if (cmd->healing && leveltime % 35 == 8)
+    {
+    	    player->mo->health += 4;
+    	    player->health += 4;
+    }
     
     P_CalcHeight (player);
 
     if (player->mo->subsector->sector->special)
 	P_PlayerInSpecialSector (player);
-    
+
     // Check for weapon change.
 
     // A special event has no other buttons.

@@ -204,11 +204,15 @@ void I_PrintStartupBanner(const char *gamedescription)
 
 boolean I_ConsoleStdout(void)
 {
+#if XBOX
+    return false;
+#else
 #ifdef _WIN32
     // SDL "helpfully" always redirects stdout to a file.
     return false;
 #else
     return isatty(fileno(stdout));
+#endif
 #endif
 }
 
@@ -251,6 +255,7 @@ void I_Quit (void)
     SDL_Quit();
 
     exit(0);
+    while (1);
 }
 
 
@@ -271,6 +276,7 @@ void I_Error (const char *error, ...)
     if (already_quitting)
     {
         fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
+        while(1);
         exit(-1);
     }
     else
@@ -323,11 +329,16 @@ void I_Error (const char *error, ...)
                                  PACKAGE_STRING, msgbuf, NULL);
     }
 
+    printf("I_Error: %s\n", msgbuf);
+
     // abort();
+
+    // while(1);
 
     SDL_Quit();
 
     exit(-1);
+    while (1);
 }
 
 //

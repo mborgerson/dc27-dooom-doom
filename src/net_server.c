@@ -420,9 +420,11 @@ static void NET_SV_SendWaitingData(net_client_t *client)
 
     for (i = 0; i < wait_data.num_players; ++i)
     {
+        //printf("setting player name %s\n", sv_players[i]->name);
         M_StringCopy(wait_data.player_names[i],
                      sv_players[i]->name,
                      MAXPLAYERNAME);
+        sv_player_names[i] = sv_players[i]->name;
         M_StringCopy(wait_data.player_addrs[i],
                      NET_AddrToString(sv_players[i]->addr),
                      MAXPLAYERNAME);
@@ -700,6 +702,8 @@ static void NET_SV_ParseSYN(net_packet_t *packet, net_client_t *client,
     // TODO: Add server option to allow rejecting clients which set
     // lowres_turn.  This is potentially desirable as the presence of such
     // clients affects turning resolution.
+
+    printf("num players = %d\n", num_players);
 
     // Adopt the game mode and mission of the first connecting client:
     if (num_players == 0 && !data.drone)
@@ -1792,7 +1796,7 @@ static void NET_SV_RunClient(net_client_t *client)
             NET_SV_BroadcastMessage("Game startup aborted because "
                                     "player '%s' disconnected.",
                                     client->name);
-            NET_SV_GameEnded();
+            // NET_SV_GameEnded();
         }
 
         free(client->name);
@@ -1908,14 +1912,14 @@ void NET_SV_RegisterWithMaster(void)
     // Implies -server.
     //
 
-    if (!M_CheckParm("-privateserver"))
-    {
-        master_server = NET_Query_ResolveMaster(server_context);
-    }
-    else
-    {
+    // if (!M_CheckParm("-privateserver"))
+    // {
+    //     master_server = NET_Query_ResolveMaster(server_context);
+    // }
+    // else
+    // {
         master_server = NULL;
-    }
+    // }
 
     // Send request.
 

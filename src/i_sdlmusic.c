@@ -1,3 +1,5 @@
+#ifndef XBOX
+
 //
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
@@ -492,3 +494,6 @@ music_module_t music_sdl_module =
     NULL,  // Poll
 };
 
+
+
+#endif

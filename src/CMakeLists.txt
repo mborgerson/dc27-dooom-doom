@@ -1,6 +1,12 @@
-foreach(SUBDIR doom heretic hexen strife setup)
+if(XBOX)
+    # Only care about doom rn
+    add_subdirectory(doom)
+else()
+###### DON'T CARE FOR XBOX
+foreach(SUBDIR doom)
     add_subdirectory("${SUBDIR}")
 endforeach()
+endif()
 
 # Common source files used by absolutely everything:
 
@@ -11,6 +17,9 @@ set(COMMON_SOURCE_FILES
     m_misc.c             m_misc.h)
 
 # Dedicated server (chocolate-server):
+
+###### DON'T CARE FOR XBOX
+if(NOT XBOX)
 
 set(DEDSERV_FILES
     d_dedicated.c
@@ -33,6 +42,8 @@ add_executable("${PROGRAM_PREFIX}server" WIN32 ${COMMON_SOURCE_FILES} ${DEDSERV_
 target_include_directories("${PROGRAM_PREFIX}server"
                            PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
 target_link_libraries("${PROGRAM_PREFIX}server" SDL2::SDL2main SDL2::net)
+
+endif()
 
 # Source files used by the game binaries (chocolate-doom, etc.)
 
@@ -129,6 +140,14 @@ if(PNG_FOUND)
     list(APPEND EXTRA_LIBS PNG::PNG)
 endif()
 
+if(XBOX)
+
+add_library("nxdk-doom" STATIC ${SOURCE_FILES_WITH_DEH})
+target_include_directories("nxdk-doom" PRIVATE ${GAME_INCLUDE_DIRS})
+target_link_libraries("nxdk-doom" doom ${EXTRA_LIBS})
+
+else()
+
 if(WIN32)
     add_executable("${PROGRAM_PREFIX}doom" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
 else()
@@ -143,86 +162,4 @@ if(MSVC)
                           LINK_FLAGS "/MANIFEST:NO")
 endif()
 
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}heretic" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
-else()
-    add_executable("${PROGRAM_PREFIX}heretic" ${SOURCE_FILES_WITH_DEH})
 endif()
-
-target_include_directories("${PROGRAM_PREFIX}heretic" PRIVATE ${GAME_INCLUDE_DIRS})
-target_link_libraries("${PROGRAM_PREFIX}heretic" heretic ${EXTRA_LIBS})
-
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}heretic" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
-
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}hexen" WIN32 ${SOURCE_FILES} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
-else()
-    add_executable("${PROGRAM_PREFIX}hexen" ${SOURCE_FILES})
-endif()
-
-target_include_directories("${PROGRAM_PREFIX}hexen" PRIVATE ${GAME_INCLUDE_DIRS})
-target_link_libraries("${PROGRAM_PREFIX}hexen" hexen ${EXTRA_LIBS})
-
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}hexen" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
-
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}strife" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
-else()
-    add_executable("${PROGRAM_PREFIX}strife" ${SOURCE_FILES_WITH_DEH})
-endif()
-
-target_include_directories("${PROGRAM_PREFIX}strife" PRIVATE ${GAME_INCLUDE_DIRS})
-target_link_libraries("${PROGRAM_PREFIX}strife" strife ${EXTRA_LIBS})
-
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}strife" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
-
-# Source files needed for chocolate-setup:
-
-set(SETUP_FILES
-    deh_str.c           deh_str.h
-    d_mode.c            d_mode.h
-    d_iwad.c            d_iwad.h
-    i_timer.c           i_timer.h
-    m_config.c          m_config.h
-    m_controls.c        m_controls.h
-    net_io.c            net_io.h
-    net_packet.c        net_packet.h
-    net_petname.c       net_petname.h
-    net_sdl.c           net_sdl.h
-    net_query.c         net_query.h
-    net_structrw.c      net_structrw.h
-    z_native.c          z_zone.h)
-
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}setup" WIN32 ${SETUP_FILES} ${COMMON_SOURCE_FILES} "${CMAKE_CURRENT_BINARY_DIR}/setup-res.rc")
-else()
-    add_executable("${PROGRAM_PREFIX}setup" ${SETUP_FILES} ${COMMON_SOURCE_FILES})
-endif()
-
-target_include_directories("${PROGRAM_PREFIX}setup"
-                           PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
-target_link_libraries("${PROGRAM_PREFIX}setup" SDL2::SDL2main SDL2::SDL2 SDL2::mixer SDL2::net setup textscreen)
-
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}setup" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
-
-add_executable(midiread midifile.c z_native.c i_system.c m_argv.c m_misc.c d_iwad.c deh_str.c m_config.c)
-target_compile_definitions(midiread PRIVATE "-DTEST")
-target_include_directories(midiread PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
-target_link_libraries(midiread SDL2::SDL2main SDL2::SDL2)
-
-add_executable(mus2mid mus2mid.c memio.c z_native.c i_system.c m_argv.c m_misc.c d_iwad.c deh_str.c m_config.c)
-target_compile_definitions(mus2mid PRIVATE "-DSTANDALONE")
-target_include_directories(mus2mid PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
-target_link_libraries(mus2mid SDL2::SDL2main SDL2::SDL2)

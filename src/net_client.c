@@ -252,6 +252,7 @@ static void NET_CL_ExpandFullTiccmd(net_full_ticcmd_t *cmd, unsigned int seq,
             // Use the ticcmd diff to patch the previous ticcmd to
             // the new ticcmd
 
+            // printf("player %d: ", i);
             NET_TiccmdPatch(&recvwindow_cmd_base[i], diff, &ticcmds[i]);
 
             // Store a copy for next time
@@ -1054,7 +1055,7 @@ static void NET_CL_SendSYN(net_connect_data_t *data)
     NET_WriteString(packet, PACKAGE_STRING);
     NET_WriteProtocolList(packet);
     NET_WriteConnectData(packet, data);
-    NET_WriteString(packet, net_player_name);
+    NET_WriteString(packet, "sheep");
     NET_Conn_SendPacket(&client_connection, packet);
     NET_FreePacket(packet);
 }
@@ -1138,6 +1139,11 @@ boolean NET_CL_Connect(net_addr_t *addr, net_connect_data_t *data)
         SetRejectReason(NULL);
         client_state = CLIENT_STATE_WAITING_LAUNCH;
         drone = data->drone;
+
+#ifdef XBOX
+        extern int match_connected ;
+        match_connected = 1;
+#endif
 
         return true;
     }

@@ -486,7 +486,6 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
             net_sdl_module.InitClient();
             addr = net_sdl_module.ResolveAddress(myargv[i+1]);
             NET_ReferenceAddress(addr);
-
             if (addr == NULL)
             {
                 I_Error("Unable to resolve '%s'\n", myargv[i+1]);

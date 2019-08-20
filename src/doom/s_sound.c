@@ -115,6 +115,7 @@ void S_Init(int sfxVolume, int musicVolume)
 {
     int i;
 
+#ifndef XBOX
     if (gameversion == exe_doom_1_666)
     {
         if (logical_gamemission == doom)
@@ -130,6 +131,7 @@ void S_Init(int sfxVolume, int musicVolume)
     {
         I_SetOPLDriverVer(opl_doom_1_9);
     }
+#endif
 
     I_PrecacheSounds(S_sfx, NUMSFX);
 

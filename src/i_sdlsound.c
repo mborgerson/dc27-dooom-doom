@@ -1,3 +1,5 @@
+#ifndef XBOX
+
 //
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
@@ -1165,3 +1167,4 @@ sound_module_t sound_sdl_module =
     I_SDL_PrecacheSounds,
 };
 
+#endif

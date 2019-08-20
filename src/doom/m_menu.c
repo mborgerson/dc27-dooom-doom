@@ -77,7 +77,11 @@ int			showMessages = 1;
 
 // Blocky mode, has default, 0 = high, 1 = normal
 int			detailLevel = 0;
-int			screenblocks = 9;
+#ifdef XBOX
+int			screenblocks = 10;
+#else
+int         screenblocks = 9;
+#endif
 
 // temp for screenblocks (0-9)
 int			screenSize;
@@ -1899,6 +1903,7 @@ void M_StartControlPanel (void)
 
 static void M_DrawOPLDev(void)
 {
+#ifndef XBOX
     extern void I_OPL_DevMessages(char *, size_t);
     char debug[1024];
     char *curr, *p;
@@ -1927,6 +1932,7 @@ static void M_DrawOPLDev(void)
 
         curr = p + 1;
     }
+#endif
 }
 
 //

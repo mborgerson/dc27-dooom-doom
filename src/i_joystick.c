@@ -41,12 +41,20 @@ static SDL_Joystick *joystick = NULL;
 // Configuration variables:
 
 // Standard default.cfg Joystick enable/disable
+#ifdef XBOX
+static int usejoystick = 1;
 
+// SDL GUID and index of the joystick to use.
+static char *joystick_guid = "000000000";
+static int joystick_index = 0;
+
+#else
 static int usejoystick = 0;
 
 // SDL GUID and index of the joystick to use.
 static char *joystick_guid = "";
 static int joystick_index = -1;
+#endif
 
 // Which joystick axis to use for horizontal movement, and whether to
 // invert the direction:
@@ -54,11 +62,17 @@ static int joystick_index = -1;
 static int joystick_x_axis = 0;
 static int joystick_x_invert = 0;
 
+// look side to side
+
 // Which joystick axis to use for vertical movement, and whether to
 // invert the direction:
 
 static int joystick_y_axis = 1;
+#ifdef XBOX
+static int joystick_y_invert = 1;
+#else
 static int joystick_y_invert = 0;
+#endif
 
 // Which joystick axis to use for strafing?
 
@@ -73,8 +87,15 @@ static int joystick_look_invert = 0;
 // Virtual to physical button joystick button mapping. By default this
 // is a straight mapping.
 static int joystick_physical_buttons[NUM_VIRTUAL_BUTTONS] = {
+#ifdef XBOX
+    0, 3, 2, 1, 4, 5, 6, 7, 8, 9, 10
+#else
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+#endif
 };
+
+// y = action
+// a = fire
 
 void I_ShutdownJoystick(void)
 {
@@ -115,7 +136,11 @@ static int DeviceIndex(void)
     SDL_JoystickGUID guid, dev_guid;
     int i;
 
+#ifdef XBOX
+    memset(&guid, 0, sizeof(guid));
+#else
     guid = SDL_JoystickGetGUIDFromString(joystick_guid);
+#endif
 
     // GUID identifies a class of device rather than a specific device.
     // Check if joystick_index has the expected GUID, as this can act
@@ -152,6 +177,10 @@ void I_InitJoystick(void)
     {
         return;
     }
+
+#ifdef XBOX
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+#endif
 
     if (SDL_Init(SDL_INIT_JOYSTICK) < 0)
     {
@@ -265,6 +294,10 @@ static int ReadButtonState(int vbutton)
     return SDL_JoystickGetButton(joystick, physbutton);
 }
 
+#ifdef XBOX
+#include <xboxkrnl/xboxkrnl.h>
+#endif
+
 // Get a bitmask of all currently-pressed buttons
 
 static int GetButtonsState(void)
@@ -281,6 +314,16 @@ static int GetButtonsState(void)
             result |= 1 << i;
         }
     }
+
+#if 0
+#ifdef XBOX
+// Exit hack
+    if (SDL_JoystickGetButton(joystick, 6)) {
+        HalReturnToFirmware(HalRebootRoutine);
+        while (1);
+    }
+#endif
+#endif
 
     return result;
 }

@@ -23,7 +23,9 @@
 #include <ctype.h>
 
 #include "SDL.h"
+#ifndef XBOX
 #include "SDL_mixer.h"
+#endif
 
 #include "i_glob.h"
 #include "i_midipipe.h"
@@ -109,6 +111,10 @@ static file_metadata_t file_metadata;
 // Position (in samples) that we have reached in the current track.
 // This is updated by the TrackPositionCallback function.
 static unsigned int current_track_pos;
+
+#ifdef XBOX
+typedef int Mix_Music;
+#endif
 
 // Currently playing music track.
 static Mix_Music *current_track_music = NULL;
@@ -1066,6 +1072,7 @@ static void DumpSubstituteConfig(char *filename)
 
 static void I_MP_ShutdownMusic(void)
 {
+#ifndef XBOX
     if (music_initialized)
     {
         Mix_HaltMusic();
@@ -1078,14 +1085,22 @@ static void I_MP_ShutdownMusic(void)
             sdl_was_initialized = false;
         }
     }
+#else
+    music_initialized = false;
+    sdl_was_initialized = false;
+#endif
 }
 
 static boolean SDLIsInitialized(void)
 {
+#ifdef XBOX
+    return true;
+#else
     int freq, channels;
     Uint16 format;
 
     return Mix_QuerySpec(&freq, &format, &channels) != 0;
+#endif
 }
 
 // Callback function that is invoked to track current track position.
@@ -1126,6 +1141,10 @@ static boolean I_MP_InitMusic(void)
 
     // If SDL_mixer is not initialized, we have to initialize it
     // and have the responsibility to shut it down later on.
+#ifdef XBOX
+    music_initialized = true;
+    sdl_was_initialized = true;
+#else
     if (SDLIsInitialized())
     {
         music_initialized = true;
@@ -1153,6 +1172,7 @@ static boolean I_MP_InitMusic(void)
 
     // Register an effect function to track the music position.
     Mix_RegisterEffect(MIX_CHANNEL_POST, TrackPositionCallback, NULL, NULL);
+#endif
 
     return music_initialized;
 }
@@ -1161,7 +1181,9 @@ static boolean I_MP_InitMusic(void)
 
 static void I_MP_SetMusicVolume(int volume)
 {
+#ifndef XBOX
     Mix_VolumeMusic((volume * MIX_MAX_VOLUME) / 127);
+#endif
 }
 
 // Start playing a mid
@@ -1175,6 +1197,7 @@ static void I_MP_PlaySong(void *handle, boolean looping)
         return;
     }
 
+#ifndef XBOX
     if (handle == NULL)
     {
         return;
@@ -1207,6 +1230,7 @@ static void I_MP_PlaySong(void *handle, boolean looping)
         fprintf(stderr, "I_MP_PlaySong: Error starting track: %s\n",
                 Mix_GetError());
     }
+#endif
 }
 
 static void I_MP_PauseSong(void)
@@ -1216,7 +1240,9 @@ static void I_MP_PauseSong(void)
         return;
     }
 
+#ifndef XBOX
     Mix_PauseMusic();
+#endif
 }
 
 static void I_MP_ResumeSong(void)
@@ -1226,7 +1252,9 @@ static void I_MP_ResumeSong(void)
         return;
     }
 
+#ifndef XBOX
     Mix_ResumeMusic();
+#endif
 }
 
 static void I_MP_StopSong(void)
@@ -1236,12 +1264,15 @@ static void I_MP_StopSong(void)
         return;
     }
 
+#ifndef XBOX
     Mix_HaltMusic();
+#endif
     current_track_music = NULL;
 }
 
 static void I_MP_UnRegisterSong(void *handle)
 {
+#ifndef XBOX
     Mix_Music *music = (Mix_Music *) handle;
 
     if (!music_initialized)
@@ -1255,10 +1286,12 @@ static void I_MP_UnRegisterSong(void *handle)
     }
 
     Mix_FreeMusic(music);
+#endif
 }
 
 static void *I_MP_RegisterSong(void *data, int len)
 {
+#ifndef XBOX
     const char *filename;
     Mix_Music *music;
 
@@ -1288,6 +1321,9 @@ static void *I_MP_RegisterSong(void *data, int len)
     // to loop the music.
     ReadLoopPoints(filename, &file_metadata);
     return music;
+#else
+    return NULL;
+#endif
 }
 
 // Is the song playing?
@@ -1298,12 +1334,19 @@ static boolean I_MP_MusicIsPlaying(void)
         return false;
     }
 
+#ifdef XBOX
+    return false;
+#else
     return Mix_PlayingMusic();
+#endif
 }
 
 // Get position in substitute music track, in seconds since start of track.
 static double GetMusicPosition(void)
 {
+#if XBOX
+    return 0;
+#else
     unsigned int music_pos;
     int freq;
 
@@ -1314,10 +1357,12 @@ static double GetMusicPosition(void)
     SDL_UnlockAudio();
 
     return (double) music_pos / freq;
+#endif
 }
 
 static void RestartCurrentTrack(void)
 {
+#ifndef XBOX
     double start = (double) file_metadata.start_time
                  / file_metadata.samplerate_hz;
 
@@ -1331,12 +1376,14 @@ static void RestartCurrentTrack(void)
     SDL_LockAudio();
     current_track_pos = file_metadata.start_time;
     SDL_UnlockAudio();
+#endif
 }
 
 // Poll music position; if we have passed the loop point end position
 // then we need to go back.
 static void I_MP_PollMusic(void)
 {
+#ifndef XBOX
     // When playing substitute tracks, loop tags only apply if we're playing
     // a looping track. Tracks like the title screen music have the loop
     // tags ignored.
@@ -1357,6 +1404,7 @@ static void I_MP_PollMusic(void)
             RestartCurrentTrack();
         }
     }
+#endif
 }
 
 music_module_t music_pack_module =

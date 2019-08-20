@@ -32,8 +32,16 @@
 #include <direct.h>
 #endif
 #else
+
+#if XBOX
+#include <stat.h>
+// #include <types.h>
+#include <assert.h>
+#include <string.h>
+#else
 #include <sys/stat.h>
 #include <sys/types.h>
+#endif
 #endif
 
 #include "doomtype.h"
@@ -54,10 +62,15 @@
 
 void M_MakeDirectory(const char *path)
 {
+#ifdef XBOX
+    if (strcmp(path, "") == 0) return;
+    return; //assert(0);
+#else
 #ifdef _WIN32
     mkdir(path);
 #else
     mkdir(path, 0755);
+#endif
 #endif
 }
 
