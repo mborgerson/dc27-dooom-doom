@@ -45,6 +45,8 @@
 // How often to re-resolve the address of the master server?
 #define MASTER_RESOLVE_PERIOD 8 * 60 * 60 /* 8 hours */
 
+char *sv_player_names[NET_MAXPLAYERS];
+
 typedef enum
 {
     // waiting for the game to be "launched" (key player to press the start
