@@ -16,7 +16,7 @@
 
 #ifndef NET_SERVER_H
 #define NET_SERVER_H
-char *sv_player_names[NET_MAXPLAYERS];
+extern char *sv_player_names[NET_MAXPLAYERS];
 
 // initialize server and wait for connections
 
